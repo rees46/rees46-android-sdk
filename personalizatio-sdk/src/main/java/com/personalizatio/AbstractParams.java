@@ -6,57 +6,52 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-abstract class AbstractParams<P extends AbstractParams<P>> {
+abstract class AbstractParams {
 	protected final JSONObject params = new JSONObject();
 
 	public interface ParamInterface {
 		String getValue();
 	}
 
-	/**
-	 * Вставка строковых параметров
-	 */
-	public P put(P.ParamInterface param, String value) {
-		try {
-			params.put(param.getValue(), value);
-		} catch(JSONException e) {
-			Log.e(SDK.TAG, e.getMessage(), e);
-		}
-		return (P) this;
-	}
-
-	public P put(P.ParamInterface param, int value) {
+	public AbstractParams put(ParamInterface param, int value) {
 		return put(param, String.valueOf(value));
 	}
 
-	public P put(P.ParamInterface param, boolean value) {
+	/**
+	 * Вставка строковых параметров
+	 */
+	public AbstractParams put(ParamInterface param, String value) {
 		try {
 			params.put(param.getValue(), value);
 		} catch(JSONException e) {
 			Log.e(SDK.TAG, e.getMessage(), e);
 		}
-		return (P) this;
+		return this;
 	}
 
-	public P put(P.ParamInterface param, JSONObject value) {
+	public AbstractParams put(ParamInterface param, boolean value) {
 		try {
 			params.put(param.getValue(), value);
 		} catch(JSONException e) {
 			Log.e(SDK.TAG, e.getMessage(), e);
 		}
-		return (P) this;
+		return this;
+	}
+
+	public AbstractParams put(ParamInterface param, JSONObject value) {
+		try {
+			params.put(param.getValue(), value);
+		} catch(JSONException e) {
+			Log.e(SDK.TAG, e.getMessage(), e);
+		}
+		return this;
 	}
 
 	/**
 	 * Вставка параметров с массивом
 	 */
-	public P put(P.ParamInterface param, String[] value) {
-		try {
-			params.put(param.getValue(), TextUtils.join(",", value));
-		} catch(JSONException e) {
-			Log.e(SDK.TAG, e.getMessage(), e);
-		}
-		return (P) this;
+	public AbstractParams put(ParamInterface param, String[] value) {
+		return put(param, TextUtils.join(",", value));
 	}
 
 	JSONObject build() {

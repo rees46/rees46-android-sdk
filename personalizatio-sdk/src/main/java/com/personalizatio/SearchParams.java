@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class SearchParams extends AbstractParams<SearchParams> {
+public final class SearchParams extends AbstractParams {
 
 	/**
    * <a href="https://reference.api.rees46.com/#full-search">...</a>
@@ -67,7 +67,7 @@ public final class SearchParams extends AbstractParams<SearchParams> {
 	/**
 	 * Структура для фильтров
 	 */
-	final public static class SearchFilters {
+	public final static class SearchFilters {
 		private final HashMap<String, String[]> filters = new HashMap<>();
 
 		public void put(String key, String[] values) {
@@ -89,6 +89,7 @@ public final class SearchParams extends AbstractParams<SearchParams> {
 	}
 
 	public SearchParams put(Parameter param, SearchFilters value) {
-		return put(param, value.toString());
+		super.put(param, value.toString());
+		return this;
 	}
 }

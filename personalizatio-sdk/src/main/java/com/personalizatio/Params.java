@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class Params extends AbstractParams<Params> {
+public final class Params extends AbstractParams {
 
 	/**
 	 * Основные параметры
@@ -153,15 +153,11 @@ public final class Params extends AbstractParams<Params> {
 	 * Вставка параметров рекомендаций
 	 */
 	public Params put(RecommendedBy recommended_by) {
-		try {
-			params.put(InternalParameter.RECOMMENDED_BY.getValue(), recommended_by.type);
-			if( recommended_by.code != null ) {
-				params.put(InternalParameter.RECOMMENDED_CODE.getValue(), recommended_by.code);
-			}
-		} catch( JSONException e ) {
-			Log.e(SDK.TAG, e.getMessage(), e);
-		}
-		return this;
+    super.put(InternalParameter.RECOMMENDED_BY, recommended_by.type);
+    if( recommended_by.code != null ) {
+      super.put(InternalParameter.RECOMMENDED_CODE, recommended_by.code);
+    }
+    return this;
 	}
 
 	/**
@@ -176,7 +172,7 @@ public final class Params extends AbstractParams<Params> {
 				array = new JSONArray();
 				params.put("items", array);
 			}
-			JSONObject object = new JSONObject();
+			JSONObject object = new JSONObject(); // Как будто тут дальнейший код не дописали. TODO: разобраться
 			for( Map.Entry<String, String> entry : item.columns.entrySet() ) {
 				object.put(entry.getKey(), entry.getValue());
 			}
