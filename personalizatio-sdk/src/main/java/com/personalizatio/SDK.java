@@ -25,13 +25,10 @@ import org.json.JSONObject;
 
 import java.security.SecureRandom;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -86,11 +83,11 @@ public class SDK {
 	}
 
 	/**
-	 * Update profile data
-	 * https://reference.api.rees46.com/#save-profile-settings
-	 *
-	 * @param data profile data
-	 */
+   * Update profile data
+   * <a href="https://reference.api.rees46.com/#save-profile-settings">...</a>
+   *
+   * @param data profile data
+   */
 	public static void profile(HashMap<String, String> data) {
 		profile(data, null);
 	}
@@ -255,7 +252,7 @@ public class SDK {
 	 * @param item_id ID товара
 	 */
 	public static void track(Params.TrackEvent event, String item_id) {
-		track(event, (new Params()).put(new Params.Item(item_id)), null);
+		track(event, new Params().put(new Params.Item(item_id)), null);
 	}
 
 	/**
@@ -387,14 +384,14 @@ public class SDK {
 	}
 
 	/**
-	 * Подписывает на снижение цены
-	 * https://reference.api.rees46.com/?shell#price-drop
-	 *
-	 * @param id            Идентификатор товара
-	 * @param current_price Текущая цена
-	 * @param email         Email, если есть
-	 * @param phone         Телефон, если есть
-	 */
+   * Подписывает на снижение цены
+   * <a href="https://reference.api.rees46.com/?shell#price-drop">...</a>
+   *
+   * @param id            Идентификатор товара
+   * @param current_price Текущая цена
+   * @param email         Email, если есть
+   * @param phone         Телефон, если есть
+   */
 	public static void subscribeForPriceDrop(String id, double current_price, @Nullable String email, @Nullable String phone) {
 		subscribeForPriceDrop(id, current_price, email, phone, null);
 	}
@@ -413,13 +410,13 @@ public class SDK {
 	}
 
 	/**
-	 * Отписывает на снижение цены
-	 * https://reference.api.rees46.com/?shell#price-drop
-	 *
-	 * @param item_ids Идентификаторы товара
-	 * @param email    Email, если есть
-	 * @param phone    Телефон, если есть
-	 */
+   * Отписывает на снижение цены
+   * <a href="https://reference.api.rees46.com/?shell#price-drop">...</a>
+   *
+   * @param item_ids Идентификаторы товара
+   * @param email    Email, если есть
+   * @param phone    Телефон, если есть
+   */
 	public static void unsubscribeForPriceDrop(String[] item_ids, @Nullable String email, @Nullable String phone) {
 		unsubscribeForPriceDrop(item_ids, email, phone, null);
 	}
@@ -441,13 +438,13 @@ public class SDK {
 	}
 
 	/**
-	 * Подписывает на наличие товара
-	 * https://reference.api.rees46.com/?shell#back-in-stock
-	 *
-	 * @param id    Идентификатор товара
-	 * @param email Email, если есть
-	 * @param phone Телефон, если есть
-	 */
+   * Подписывает на наличие товара
+   * <a href="https://reference.api.rees46.com/?shell#back-in-stock">...</a>
+   *
+   * @param id    Идентификатор товара
+   * @param email Email, если есть
+   * @param phone Телефон, если есть
+   */
 	public static void subscribeForBackInStock(String id, @Nullable String email, @Nullable String phone) {
 		subscribeForBackInStock(id, null, email, phone, null);
 	}
@@ -472,13 +469,13 @@ public class SDK {
 	}
 
 	/**
-	 * Отписывает на наличие товара
-	 * https://reference.api.rees46.com/?shell#back-in-stock
-	 *
-	 * @param item_ids Идентификатор товара
-	 * @param email    Email, если есть
-	 * @param phone    Телефон, если есть
-	 */
+   * Отписывает на наличие товара
+   * <a href="https://reference.api.rees46.com/?shell#back-in-stock">...</a>
+   *
+   * @param item_ids Идентификатор товара
+   * @param email    Email, если есть
+   * @param phone    Телефон, если есть
+   */
 	public static void unsubscribeForBackInStock(String[] item_ids, @Nullable String email, @Nullable String phone) {
 		unsubscribeForBackInStock(item_ids, email, phone, null);
 	}
@@ -500,13 +497,13 @@ public class SDK {
 	}
 
 	/**
-	 * Manage subscriptions
-	 * https://reference.api.rees46.com/?swift#manage-subscriptions
-	 *
-	 * @param email
-	 * @param phone
-	 * @param subscriptions
-	 */
+   * Manage subscriptions
+   * <a href="https://reference.api.rees46.com/?swift#manage-subscriptions">...</a>
+   *
+   * @param email
+   * @param phone
+   * @param subscriptions
+   */
 	public static void manageSubscription(@Nullable String email, @Nullable String phone, @NonNull HashMap<String, Boolean> subscriptions) {
 		manageSubscription(email, phone, subscriptions, null);
 	}
@@ -535,19 +532,19 @@ public class SDK {
 	public static String getSegment() {
 		if( instance == null ) {
 			throw new RuntimeException("You need initialize SDK before request segment");
-		} else {
-			return instance.segment;
 		}
+
+		return instance.segment;
 	}
 
 	/**
-	 * Add user to a segment
-	 * https://reference.api.rees46.com/?java#add-user-to-a-segment
-	 *
-	 * @param segment_id
-	 * @param email
-	 * @param phone
-	 */
+   * Add user to a segment
+   * <a href="https://reference.api.rees46.com/?java#add-user-to-a-segment">...</a>
+   *
+   * @param segment_id
+   * @param email
+   * @param phone
+   */
 	public static void addToSegment(@NonNull String segment_id, @Nullable String email, @Nullable String phone) {
 		segmentMethod("add", segment_id, email, phone, null);
 	}
@@ -557,13 +554,13 @@ public class SDK {
 	}
 
 	/**
-	 * Remove user from a segment
-	 * https://reference.api.rees46.com/?swift#remove-user-from-a-segment
-	 *
-	 * @param segment_id
-	 * @param email
-	 * @param phone
-	 */
+   * Remove user from a segment
+   * <a href="https://reference.api.rees46.com/?swift#remove-user-from-a-segment">...</a>
+   *
+   * @param segment_id
+   * @param email
+   * @param phone
+   */
 	public static void removeFromSegment(@NonNull String segment_id, @Nullable String email, @Nullable String phone) {
 		segmentMethod("remove", segment_id, email, phone, null);
 	}
@@ -573,11 +570,11 @@ public class SDK {
 	}
 
 	/**
-	 * Get user segments
-	 * https://reference.api.rees46.com/?swift#get-user-segments
-	 *
-	 * @param listener
-	 */
+   * Get user segments
+   * <a href="https://reference.api.rees46.com/?swift#get-user-segments">...</a>
+   *
+   * @param listener
+   */
 	public static void getCurrentSegment(@NonNull Api.OnApiCallbackListener listener) {
 		instance.getAsync("segments/get", new JSONObject(), listener);
 	}
@@ -601,12 +598,12 @@ public class SDK {
 	}
 
 	/**
-	 * Send notification token
-	 * https://reference.api.rees46.com/?java#create-new-token
-	 *
-	 * @param token
-	 * @param listener
-	 */
+   * Send notification token
+   * <a href="https://reference.api.rees46.com/?java#create-new-token">...</a>
+   *
+   * @param token
+   * @param listener
+   */
 	public static void setPushTokenNotification(@NonNull String token, Api.OnApiCallbackListener listener) {
 		HashMap<String, String> params = new HashMap<>();
 		params.put("platform", "android");
@@ -687,23 +684,23 @@ public class SDK {
 	 */
 	@SuppressLint("HardwareIds")
 	private void did() {
-		if( did == null ) {
-			SharedPreferences preferences = prefs();
-			did = preferences.getString(DID_FIELD, null);
-			if( did == null ) {
-				//get unique device id
-				did = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-			}
+		if (did != null) {
+			return;
+		}
+		SharedPreferences preferences = prefs();
+		did = preferences.getString(
+				DID_FIELD,
+				Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID)
+		);
 
-			//Добавляем запрос токена в очередь
-			queue.add(new Thread(this::getToken));
+		//Добавляем запрос токена в очередь
+		queue.add(new Thread(this::getToken));
 
-			//Если еще ни разу не вызывали init
-			if( preferences.getString(DID_FIELD, null) == null ) {
-				init();
-			} else {
-				initialized(null);
-			}
+		//Если еще ни разу не вызывали init
+		if (preferences.getString(DID_FIELD, null) == null) {
+			init();
+		} else {
+			initialized(null);
 		}
 	}
 
@@ -717,14 +714,14 @@ public class SDK {
 	private void init() {
 
 		//Disable working Google Play Pre-Launch report devices
-		if( isTestDevice() ) {
+		if(isTestDevice()) {
 			Log.w(TAG, "Disable working Google Play Pre-Launch report devices");
 			return;
 		}
 
 		try {
 			JSONObject params = new JSONObject();
-			params.put("tz", String.valueOf((int) (TimeZone.getDefault().getRawOffset() / 3600000.0)));
+			params.put("tz", String.valueOf((int) (TimeZone.getDefault().getRawOffset() / 3_600_000.0)));
 			send("get", "init", params, new Api.OnApiCallbackListener() {
 				@Override
 				public void onSuccess(JSONObject response) {
@@ -771,8 +768,11 @@ public class SDK {
 		//Если сеанса нет, пробуем найти в хранилище
 		//Нужно разделять сеансы по времени.
 		//Для этого достаточно отслеживать время последнего действия на сеанс и, если оно больше N часов, то создавать новый сеанс.
-		if( seance == null && prefs().getString(SID_FIELD, null) != null && prefs().getLong(SID_LAST_ACT_FIELD, 0) >= System.currentTimeMillis() - SESSION_CODE_EXPIRE * 3600 * 1000 ) {
-			seance = prefs().getString(SID_FIELD, null);
+		String tempSeance = prefs().getString(SID_FIELD, null);
+		if(seance == null &&
+				tempSeance != null &&
+				prefs().getLong(SID_LAST_ACT_FIELD, 0) >= System.currentTimeMillis() - SESSION_CODE_EXPIRE * 3600 * 1000) {
+			seance = tempSeance;
 		}
 
 		//Если сеанса нет, генерируем новый
@@ -818,11 +818,11 @@ public class SDK {
 	 */
 	private void getToken() {
 		FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-			if( !task.isSuccessful() ) {
+			if(!task.isSuccessful()) {
 				SDK.error("getInstanceId failed", task.getException());
 				return;
 			}
-			if( task.getResult() == null ) {
+			if(task.getResult() == null) {
 				SDK.error("Firebase result is null");
 				return;
 			}
@@ -832,8 +832,8 @@ public class SDK {
 			SDK.debug("token: " + token);
 
 			//Check send token
-			if( prefs().getString(TOKEN_FIELD, null) == null || !Objects.equals(prefs().getString(TOKEN_FIELD, null), token) ) {
-
+			String tokenField = prefs().getString(TOKEN_FIELD, null);
+			if(tokenField == null || !Objects.equals(tokenField, token)) {
 				//Send token
 				setPushTokenNotification(token, new Api.OnApiCallbackListener() {
 					@Override

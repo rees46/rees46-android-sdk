@@ -8,13 +8,13 @@ import com.google.firebase.messaging.RemoteMessage;
  *
  * @author nixx.dj@gmail.com
  */
-final public class MessagingService extends FirebaseMessagingService {
+public final class MessagingService extends FirebaseMessagingService {
 
 	@Override
 	public void onMessageReceived(RemoteMessage remoteMessage) {
 
 		// Check if message contains a data payload.
-		if( remoteMessage.getData().size() > 0 ) {
+		if(!remoteMessage.getData().isEmpty()) {
 			SDK.debug("Message data payload: " + remoteMessage.getData());
 			SDK.onMessage(remoteMessage);
 		}

@@ -1,7 +1,6 @@
 package com.personalizatio.stories;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.media3.common.C;
 import androidx.media3.common.PlaybackException;
@@ -21,7 +19,6 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.personalizatio.OnLinkClickListener;
 import com.personalizatio.R;
 import com.personalizatio.SDK;
 
@@ -137,19 +134,20 @@ final class StoryView extends ConstraintLayout implements StoriesProgressView.St
 	private void playVideo() {
 		if( storiesStarted ) {
 			PagerHolder holder = getHolder(mViewPager.getCurrentItem());
-			if( holder != null ) {
-				Story.Slide slide = story.slides.get(mViewPager.getCurrentItem());
-				if( slide.type.equals("video") ) {
-					slide.prepared = false;
-					//Подготавливаем плеер
-					stories_view.player.player.addListener(this);
-					holder.story_item.video.setVisibility(GONE);
-					holder.story_item.image.setAlpha(1f);
-					holder.story_item.video.setPlayer(stories_view.player.player);
-					stories_view.player.prepare(slide.background);
-					storiesProgressView.pause();
-					mute.setChecked(stories_view.isMute());
-				}
+			if( holder == null ) {
+				return;
+			}
+			Story.Slide slide = story.slides.get(mViewPager.getCurrentItem());
+			if( slide.type.equals("video") ) {
+				slide.prepared = false;
+				//Подготавливаем плеер
+				stories_view.player.player.addListener(this);
+				holder.story_item.video.setVisibility(GONE);
+				holder.story_item.image.setAlpha(1f);
+				holder.story_item.video.setPlayer(stories_view.player.player);
+				stories_view.player.prepare(slide.background);
+				storiesProgressView.pause();
+				mute.setChecked(stories_view.isMute());
 			}
 		}
 	}
@@ -234,7 +232,7 @@ final class StoryView extends ConstraintLayout implements StoriesProgressView.St
 					if( story.slides.get(position).type.equals("image") && storiesStarted ) {
 						try {
 							storiesProgressView.resume();
-						} catch(IndexOutOfBoundsException e) {
+						} catch (IndexOutOfBoundsException ignored) {
 						}
 					}
 				}

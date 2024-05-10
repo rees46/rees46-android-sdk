@@ -1,7 +1,6 @@
 package com.personalizatio.stories;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -14,11 +13,9 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.personalizatio.OnLinkClickListener;
 import com.personalizatio.R;
 
 import java.util.ArrayList;
@@ -115,10 +112,8 @@ final class StoryDialog extends Dialog implements PullDismissLayout.Listener {
 			public void onPageSelected(int position) {
 				for(int i = 0; i < stories.size(); i++ ) {
 					StoryView holder = getHolder(i);
-					if( holder != null ) {
-						if( i != position ) {
-							holder.stopStories();
-						}
+					if( holder != null && i != position) {
+						holder.stopStories();
 					}
 				}
 				StoryView holder = getHolder(position);
@@ -205,14 +200,14 @@ final class StoryDialog extends Dialog implements PullDismissLayout.Listener {
 			StoryView view = (StoryView) holder.itemView;
 			storyViews.put(position, view);
 			view.setStory(stories.get(position), () -> {
-				if( position >= stories.size() || position + 1 >= stories.size() ) {
+				if( position > stories.size() - 2) {
 					cancel();
 				} else {
 					mViewPager.setCurrentItem(position + 1);
 				}
 				completeListener.run();
 			}, () -> {
-				if( position == 0 ) {
+				if(position == 0) {
 					cancel();
 				} else {
 					mViewPager.setCurrentItem(position - 1);

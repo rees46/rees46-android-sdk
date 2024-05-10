@@ -3,7 +3,7 @@ package com.personalizatio;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-final public class Product {
+public final class Product {
 	public final String id;
 	public final String name;
 	public final String brand;

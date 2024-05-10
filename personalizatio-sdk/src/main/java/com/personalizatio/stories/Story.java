@@ -81,7 +81,7 @@ final class Story {
 				if( json.has("link_android") ) {
 					link = json.getString("link_android");
 				}
-				if( (link == null || link.length() == 0) && json.has("link") ) {
+				if( (link == null || link.isEmpty()) && json.has("link") ) {
 					link = json.getString("link");
 				}
 				if( json.has("icon") ) {

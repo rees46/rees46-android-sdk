@@ -28,7 +28,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-final public class StoriesView extends ConstraintLayout implements StoriesAdapter.ClickListener {
+public final class StoriesView extends ConstraintLayout implements StoriesAdapter.ClickListener {
 
 	private StoriesAdapter adapter;
 	private final ArrayList<Story> list = new ArrayList<>();

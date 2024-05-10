@@ -18,7 +18,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by Sergey Odintsov
@@ -27,7 +26,7 @@ import java.util.Map;
  */
 public final class Api {
 	private static Api instance;
-	private String url;
+	private final String url;
 
 	public abstract static class OnApiCallbackListener {
 		public void onSuccess(JSONObject response) {}
@@ -58,7 +57,7 @@ public final class Api {
 				}
 
 				URL url;
-				if( request_type.toUpperCase().equals("POST") ) {
+				if (request_type.equalsIgnoreCase("POST")) {
 					url = new URL(instance.url + method);
 				} else {
 					url = new URL(builder.build().toString());
@@ -69,7 +68,7 @@ public final class Api {
 				conn.setRequestMethod(request_type.toUpperCase());
 				conn.setConnectTimeout(5000);
 
-				if( request_type.toUpperCase().equals("POST") ) {
+				if (request_type.equalsIgnoreCase("POST")) {
 					conn.setRequestProperty("Content-Type", "application/json");
 					conn.setDoOutput(true);
 					conn.setDoInput(true);
@@ -81,7 +80,7 @@ public final class Api {
 
 				conn.connect();
 
-				if( request_type.toUpperCase().equals("POST") ) {
+				if( request_type.equalsIgnoreCase("POST") ) {
 					SDK.debug(conn.getResponseCode() + ": " + request_type.toUpperCase() + " " + url + " with body: " + params);
 				} else {
 					SDK.debug(conn.getResponseCode() + ": " + request_type.toUpperCase() + " " + builder.build().toString());
@@ -122,24 +121,14 @@ public final class Api {
 	}
 
 	private static String readStream(InputStream in) {
-		BufferedReader reader = null;
-		StringBuffer response = new StringBuffer();
-		try {
-			reader = new BufferedReader(new InputStreamReader(in));
-			String line = "";
-			while( (line = reader.readLine()) != null ) {
+		StringBuilder response = new StringBuilder();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+			String line;
+			while((line = reader.readLine()) != null) {
 				response.append(line);
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
-		} finally {
-			if( reader != null ) {
-				try {
-					reader.close();
-				} catch(IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 		return response.toString();
 	}

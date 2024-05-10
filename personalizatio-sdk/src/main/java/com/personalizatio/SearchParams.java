@@ -1,5 +1,6 @@
 package com.personalizatio;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,8 +11,8 @@ import java.util.Map;
 public final class SearchParams extends AbstractParams<SearchParams> {
 
 	/**
-	 * https://reference.api.rees46.com/#full-search
-	 */
+   * <a href="https://reference.api.rees46.com/#full-search">...</a>
+   */
 	public enum Parameter implements AbstractParams.ParamInterface {
 		PAGE("page"),
 		LIMIT("limit"),
@@ -32,7 +33,7 @@ public final class SearchParams extends AbstractParams<SearchParams> {
 		NO_CLARIFICATION("no_clarification"),
 		;
 
-		protected String value;
+		private String value;
 
 		Parameter(String v) {
 			value = v;
@@ -51,10 +52,12 @@ public final class SearchParams extends AbstractParams<SearchParams> {
 	public enum TYPE {
 		INSTANT("instant_search"),
 		FULL("full_search");
-		protected String value;
+		private String value;
+
 		TYPE(String v) {
 			value = v;
 		}
+
 		public String getValue() {
 			return value;
 		}
@@ -71,7 +74,7 @@ public final class SearchParams extends AbstractParams<SearchParams> {
 			filters.put(key, values);
 		}
 
-		public String toString() {
+		public @NotNull String toString() {
 			JSONObject json = new JSONObject();
 			for( Map.Entry<String, String[]> entry : filters.entrySet() ) {
 				String key = entry.getKey();

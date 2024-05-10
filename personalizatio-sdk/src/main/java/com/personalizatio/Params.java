@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-final public class Params extends AbstractParams<Params> {
+public final class Params extends AbstractParams<Params> {
 
 	/**
 	 * Основные параметры
@@ -43,10 +43,12 @@ final public class Params extends AbstractParams<Params> {
 		EXTENDED("extended"),
 		;
 
-		protected String value;
+		private String value;
+
 		Parameter(String v) {
 			value = v;
 		}
+
 		@Override
 		public String getValue() {
 			return value;
@@ -56,7 +58,7 @@ final public class Params extends AbstractParams<Params> {
 	/**
 	 * Типы рекомендаций
 	 */
-	final public static class RecommendedBy {
+	 public static final class RecommendedBy {
 		public enum TYPE {
 			RECOMMENDATION("dynamic"),
 			TRIGGER("chain"),
@@ -67,10 +69,12 @@ final public class Params extends AbstractParams<Params> {
 			STORIES("stories"),
 			;
 
-			protected String value;
+			private String value;
+
 			TYPE(String v) {
 				value = v;
 			}
+
 			public String getValue() {
 				return value;
 			}
@@ -78,11 +82,13 @@ final public class Params extends AbstractParams<Params> {
 
 		String type;
 		String code;
+
 		public RecommendedBy(TYPE type) {
 			this.type = type.getValue();
 		}
+
 		public RecommendedBy(TYPE type, String code) {
-			this.type = type.getValue();
+			this(type);
 			this.code = code;
 		}
 	}
@@ -90,27 +96,32 @@ final public class Params extends AbstractParams<Params> {
 	/**
 	 * Товар
 	 */
-	final public static class Item {
+	public static final class Item {
 		public enum COLUMN {
 			ID("id"),
 			AMOUNT("amount"),
 			PRICE("price"),
 			FASHION_SIZE("fashion_size"),
 			;
+
 			String value;
+
 			COLUMN(String v) {
 				value = v;
 			}
 		}
 
 		final HashMap<String, String> columns = new HashMap<>();
+
 		public Item(@NonNull String id) {
 			columns.put(COLUMN.ID.value, id);
 		}
+
 		public Item set(COLUMN column, @NonNull String value) {
 			columns.put(column.value, value);
 			return this;
 		}
+
 		public Item set(COLUMN column, int value) {
 			return set(column, String.valueOf(value));
 		}
@@ -159,7 +170,7 @@ final public class Params extends AbstractParams<Params> {
 	public Params put(Item item) {
 		try {
 			JSONArray array;
-			if( params.has("items") ) {
+			if(params.has("items")) {
 				array = params.getJSONArray("items");
 			} else {
 				array = new JSONArray();
@@ -195,10 +206,12 @@ final public class Params extends AbstractParams<Params> {
 		PROPERTIES("properties"),
 		;
 
-		protected String value;
+		String value;
+
 		InternalParameter(String v) {
 			value = v;
 		}
+
 		@Override
 		public String getValue() {
 			return value;

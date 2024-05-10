@@ -64,7 +64,7 @@ final class PullDismissLayout extends FrameLayout {
 
 		boolean pullingDown = false;
 
-		switch( action ) {
+		switch(action) {
 			case MotionEvent.ACTION_DOWN:
 				verticalTouchSlop = event.getY();
 			case MotionEvent.ACTION_MOVE:
@@ -141,8 +141,8 @@ final class PullDismissLayout extends FrameLayout {
 		@SuppressLint({"NewApi"})
 		public void onViewPositionChanged(@NonNull View view, int left, int top, int dx, int dy) {
 			int range = pullDismissLayout.getHeight();
-			int moved = Math.abs(top - startTop);
 			if( range > 0 ) {
+				int moved = Math.abs(top - startTop);
 				dragPercent = (float) moved / (float) range;
 			}
 			if( pullDismissLayout.animateAlpha ) {

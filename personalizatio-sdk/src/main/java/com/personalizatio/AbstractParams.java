@@ -24,9 +24,11 @@ abstract class AbstractParams<P extends AbstractParams<P>> {
 		}
 		return (P) this;
 	}
+
 	public P put(P.ParamInterface param, int value) {
 		return put(param, String.valueOf(value));
 	}
+
 	public P put(P.ParamInterface param, boolean value) {
 		try {
 			params.put(param.getValue(), value);
@@ -35,6 +37,7 @@ abstract class AbstractParams<P extends AbstractParams<P>> {
 		}
 		return (P) this;
 	}
+
 	public P put(P.ParamInterface param, JSONObject value) {
 		try {
 			params.put(param.getValue(), value);
@@ -43,7 +46,6 @@ abstract class AbstractParams<P extends AbstractParams<P>> {
 		}
 		return (P) this;
 	}
-
 
 	/**
 	 * Вставка параметров с массивом
