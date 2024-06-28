@@ -88,7 +88,7 @@ class ProductsAdapter(private val storiesView: StoriesView) :
                             )
                         )
                     }
-                    SDK.instance.trackStory("click", storiesView.code, storyId, slideId)
+                    SDK.instance.storiesManager.trackStory("click", storiesView.code, storyId, slideId)
                 } catch (e: ActivityNotFoundException) {
                     Log.e(SDK.TAG, e.message, e)
                     Toast.makeText(itemView.context, "Unknown error", Toast.LENGTH_SHORT).show()

@@ -39,7 +39,7 @@ abstract class AbstractMainActivity<out T : SDK> internal constructor(
         }
 
         val storiesView = findViewById<StoriesView>(R.id.stories_view)
-        sdk.initializeStoriesView(storiesView)
+        sdk.storiesManager.initialize(storiesView)
 
         if (intent.extras != null) {
             sdk.notificationClicked(intent.extras)

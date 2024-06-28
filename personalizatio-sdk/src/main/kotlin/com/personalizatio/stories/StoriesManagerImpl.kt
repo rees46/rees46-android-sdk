@@ -4,22 +4,23 @@ import android.util.Log
 import com.personalizatio.Params.RecommendedBy
 import com.personalizatio.SDK
 import com.personalizatio.api.OnApiCallbackListener
+import com.personalizatio.api.managers.StoriesManager
 import com.personalizatio.stories.models.Story
 import com.personalizatio.stories.views.StoriesView
 import org.json.JSONException
 import org.json.JSONObject
 
-internal class StoriesManager(val sdk: SDK) {
+internal class StoriesManagerImpl(val sdk: SDK) : StoriesManager {
 
     private lateinit var storiesView: StoriesView
 
-    internal fun initialize(storiesView: StoriesView) {
+    override fun initialize(storiesView: StoriesView) {
         this.storiesView = storiesView
 
         updateStories()
     }
 
-    internal fun showStory(storyId: Int) {
+    override fun showStory(storyId: Int) {
         val show = storiesView.showStory(storyId)
 
         if (show) return
@@ -35,7 +36,7 @@ internal class StoriesManager(val sdk: SDK) {
         })
     }
 
-    internal fun requestStories(code: String, listener: OnApiCallbackListener) {
+    override fun requestStories(code: String, listener: OnApiCallbackListener) {
         sdk.getAsync(String.format(REQUEST_STORIES_METHOD, code), JSONObject(), listener)
     }
 
@@ -48,7 +49,7 @@ internal class StoriesManager(val sdk: SDK) {
      * @param storyId Story ID
      * @param slideId Slide ID
      */
-    internal fun trackStory(event: String, code: String, storyId: Int, slideId: String) {
+    override fun trackStory(event: String, code: String, storyId: Int, slideId: String) {
         try {
             val params = JSONObject()
             params.put(EVENT_PARAMS_NAME, event)

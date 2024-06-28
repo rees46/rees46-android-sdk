@@ -289,7 +289,7 @@ class StoryItemView(private val storiesView: StoriesView) : ConstraintLayout(sto
                     || product != null && clickListener.onClick(product)) {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
                 }
-                SDK.instance.trackStory(
+                SDK.instance.storiesManager.trackStory(
                     event = "click",
                     code = code,
                     storyId = storyId,
@@ -386,7 +386,7 @@ class StoryItemView(private val storiesView: StoriesView) : ConstraintLayout(sto
         header.setOnTouchListener { _: View?, event: MotionEvent ->
             if (event.action == MotionEvent.ACTION_UP) {
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(element.link)))
-                SDK.instance.trackStory(
+                SDK.instance.storiesManager.trackStory(
                     event = "click",
                     code = code,
                     storyId = storyId,

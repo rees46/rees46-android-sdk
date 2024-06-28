@@ -112,7 +112,7 @@ internal class StoryView @SuppressLint("ClickableViewAccessibility") constructor
                     }
 
                     if (storiesStarted) {
-                        SDK.instance.trackStory(
+                        SDK.instance.storiesManager.trackStory(
                             event = "view",
                             code = storiesView.code,
                             storyId = story.id,
@@ -422,7 +422,7 @@ internal class StoryView @SuppressLint("ClickableViewAccessibility") constructor
             if (!storiesStarted) {
                 storiesStarted = true
                 playVideo()
-                SDK.instance.trackStory(
+                SDK.instance.storiesManager.trackStory(
                     event = "view",
                     code = storiesView.code,
                     storyId = story.id,

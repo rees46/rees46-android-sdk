@@ -12,6 +12,7 @@ class Params : AbstractParams<Params>() {
     enum class Parameter(override val value: String) : ParamInterface {
         LIMIT("limit"),
         ITEM("item"),
+        ITEM_ID("item_id"),
         PRICE("price"),
         LOCATIONS("locations"),
 
