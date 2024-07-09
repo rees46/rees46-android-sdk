@@ -1,16 +1,11 @@
-package com.personalizatio
+package com.personalizatio.api.params
 
+import com.personalizatio.AbstractParams
+import com.personalizatio.SDK
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-@Deprecated(
-    "This class will be removed in future versions.",
-    level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
-        "SearchParams",
-        "com.personalizatio.api.params.SearchParams"
-    )
-)
 class SearchParams : AbstractParams<SearchParams>() {
 
     enum class Parameter(override var value: String) : ParamInterface {
@@ -29,24 +24,14 @@ class SearchParams : AbstractParams<SearchParams>() {
         COLORS("colors"),
         FASHION_SIZES("fashion_sizes"),
         EXCLUDE("exclude"),
-
-        //params.put(SearchParams.Parameter.NO_CLARIFICATION, true);
-        NO_CLARIFICATION("no_clarification"),
+        NO_CLARIFICATION("no_clarification")
     }
 
-
-    /**
-     * Типы поиска
-     */
-    enum class TYPE(@JvmField var value: String) {
+    enum class TYPE(var value: String) {
         INSTANT("instant_search"),
         FULL("full_search")
     }
 
-
-    /**
-     * Структура для фильтров
-     */
     class SearchFilters {
         private val filters = HashMap<String, Array<String>>()
 
@@ -67,7 +52,7 @@ class SearchParams : AbstractParams<SearchParams>() {
         }
     }
 
-    fun put(param: Parameter?, value: SearchFilters): SearchParams {
-        return put(param!!, value.toString())
+    fun put(param: Parameter, value: SearchFilters): SearchParams {
+        return put(param, value.toString())
     }
 }
