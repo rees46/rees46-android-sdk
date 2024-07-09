@@ -7,7 +7,6 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.messaging.FirebaseMessaging
 import com.personalizatio.SDK.Companion.TAG
 import com.personalizatio.SDK.Companion.debug
-import com.personalizatio.api.ApiMethod
 import com.personalizatio.api.OnApiCallbackListener
 import com.personalizatio.utils.PreferencesUtils
 import kotlinx.coroutines.CoroutineScope
@@ -89,7 +88,7 @@ class RegisterManager(val sdk: SDK) {
         try {
             val params = JSONObject()
             params.put("tz", (TimeZone.getDefault().rawOffset / 3600000.0).toInt().toString())
-            sdk.send(ApiMethod.GET("init"), params, object : OnApiCallbackListener() {
+            sdk.networkManager.get("init", params, object : OnApiCallbackListener() {
                 @Volatile
                 private var attempt = 0
 

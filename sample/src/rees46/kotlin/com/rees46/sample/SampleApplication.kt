@@ -11,11 +11,14 @@ class SampleApplication : AbstractSampleApplication<REES46>(REES46.getInstance()
             BuildConfig.DEBUG -> DEBUG_SHOP_IP
             else -> RELEASE_SHOP_IP
         }
+    override val shopSecretKey: String
+        get() = "secret_key"
 
     override fun initialize() {
         REES46.initialize(
             context = applicationContext,
             shopId = shopId,
+            shopSecretKey = shopSecretKey,
             apiHost = null
         )
     }
