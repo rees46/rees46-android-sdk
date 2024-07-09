@@ -9,9 +9,19 @@ import com.google.firebase.messaging.RemoteMessage
 import com.personalizatio.Params.InternalParameter
 import com.personalizatio.Params.RecommendedBy
 import com.personalizatio.Params.TrackEvent
-import com.personalizatio.api.Api
-import com.personalizatio.api.ApiMethod
 import com.personalizatio.api.OnApiCallbackListener
+import com.personalizatio.api.managers.CartManager
+import com.personalizatio.api.managers.CategoriesManager
+import com.personalizatio.api.managers.NetworkManager
+import com.personalizatio.api.managers.TrackEventManager
+import com.personalizatio.api.managers.RecommendationManager
+import com.personalizatio.api.managers.SearchManager
+import com.personalizatio.features.cart.CartManagerImpl
+import com.personalizatio.features.categories.CategoriesManagerImpl
+import com.personalizatio.features.track_event.TrackEventManagerImpl
+import com.personalizatio.features.recommendation.RecommendationManagerImpl
+import com.personalizatio.features.search.SearchManagerImpl
+import com.personalizatio.network.NetworkManagerImpl
 import com.personalizatio.notification.NotificationHandler
 import com.personalizatio.notification.NotificationHelper
 import com.personalizatio.notifications.Source
@@ -33,7 +43,6 @@ open class SDK {
     private lateinit var source: Source
     private lateinit var shopId: String
     private lateinit var stream: String
-    private lateinit var api: Api
 
     private val queue: MutableList<Thread> = Collections.synchronizedList(ArrayList())
     private lateinit var notificationHandler: NotificationHandler
@@ -42,14 +51,36 @@ open class SDK {
     private var seance: String? = null
     private var search: Search? = null
     private var did: String? = null
-    private var initialized = false
+    internal var initialized = false
 
-    private val registerManager: RegisterManager by lazy {
+    lateinit var networkManager: NetworkManager
+
+    internal val registerManager: RegisterManager by lazy {
         RegisterManager(this)
     }
 
     private val storiesManager: StoriesManager by lazy {
         StoriesManager(this)
+    }
+
+    val trackEventManager: TrackEventManager by lazy {
+        TrackEventManagerImpl(this)
+    }
+
+    val recommendationManager: RecommendationManager by lazy {
+        RecommendationManagerImpl(this)
+    }
+
+    val searchManager: SearchManager by lazy {
+        SearchManagerImpl(this)
+    }
+
+    val categoriesManager: CategoriesManager by lazy {
+        CategoriesManagerImpl(networkManager)
+    }
+
+    val cartManager: CartManager by lazy {
+        CartManagerImpl(networkManager)
     }
 
     /**
@@ -58,6 +89,7 @@ open class SDK {
     fun initialize(
         context: Context,
         shopId: String,
+        shopSecretKey: String,
         apiUrl: String,
         tag: String,
         preferencesKey: String,
@@ -66,8 +98,6 @@ open class SDK {
         notificationId: String,
         autoSendPushToken: Boolean = true
     ) {
-        this.api = Api.getApi(apiUrl)
-
         this.context = context
         this.shopId = shopId
         this.stream = stream
@@ -86,6 +116,7 @@ open class SDK {
         notificationHandler = NotificationHandler(context) { prefs() }
         notificationHandler.createNotificationChannel()
 
+        networkManager = NetworkManagerImpl(this, apiUrl, shopId, shopSecretKey, seance, segment, stream, source)
 
         registerManager.initialize(autoSendPushToken)
     }
@@ -145,7 +176,7 @@ open class SDK {
     /**
      * Update last activity time
      */
-    private fun updateSidActivity() {
+    internal fun updateSidActivity() {
         val edit = prefs().edit()
         edit.putString(SID_FIELD, seance)
         edit.putLong(SID_LAST_ACT_FIELD, System.currentTimeMillis())
@@ -190,46 +221,35 @@ open class SDK {
     fun notificationClicked(extras: Bundle?) {
         notificationHandler.notificationClicked(
             extras = extras,
-            sendAsync = { method, params -> sendAsync(method, params) },
+            sendAsync = { method, params -> networkManager.postAsync(method, params) },
             source = source
         )
     }
 
     /**
-     * Direct query execution
-     */
-    internal fun send(apiMethod: ApiMethod, params: JSONObject, listener: OnApiCallbackListener?) {
-        updateSidActivity()
-
-        api.send(apiMethod, params, listener, shopId, registerManager.did, seance, segment, stream, source)
-    }
-
-    private fun sendAsync(method: String, params: JSONObject) {
-        sendAsync(method, params, null)
-    }
-
-    /**
      * Asynchronous execution of a request if did is not specified and initialization has not been completed
      */
+    @Deprecated(
+        "This method will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "networkManager.postAsync(method, params, listener)"
+        )
+    )
     fun sendAsync(method: String, params: JSONObject, listener: OnApiCallbackListener?) {
-        val thread = Thread { send(ApiMethod.POST(method), params, listener) }
-        if (registerManager.did != null && initialized) {
-            thread.start()
-        } else {
-            queue.add(thread)
-        }
+        networkManager.postAsync(method, params, listener)
     }
 
     /**
      * Asynchronous execution of a request if did is not specified and initialization has not been completed
      */
+    @Deprecated(
+        "This method will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "networkManager.getAsync(method, params, listener)"
+        )
+    )
     fun getAsync(method: String, params: JSONObject, listener: OnApiCallbackListener?) {
-        val thread = Thread { send(ApiMethod.GET(method), params, listener) }
-        if (registerManager.did != null && initialized) {
-            thread.start()
-        } else {
-            queue.add(thread)
-        }
+        networkManager.getAsync(method, params, listener)
     }
 
     /**
@@ -246,6 +266,12 @@ open class SDK {
      * @param type Search type
      * @param listener Callback
      */
+    @Deprecated(
+        "This class will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "searchManager.searchInstant(query, listener) or searchManager.searchFull(query, listener)"
+        )
+    )
     fun search(query: String, type: SearchParams.TYPE, listener: OnApiCallbackListener) {
         search(query, type, SearchParams(), listener)
     }
@@ -258,6 +284,12 @@ open class SDK {
      * @param params Additional parameters for the request
      * @param listener v
      */
+    @Deprecated(
+        "This class will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "searchManager.searchInstant(query, params, listener) or searchManager.searchFull(query, params, listener)"
+        )
+    )
     fun search(
         query: String,
         type: SearchParams.TYPE,
@@ -273,6 +305,12 @@ open class SDK {
         }
     }
 
+    @Deprecated(
+        "This class will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "searchManager.searchBlank(listener)"
+        )
+    )
     fun searchBlank(listener: OnApiCallbackListener) {
         if (search != null) {
             if (search?.blank == null) {
@@ -302,8 +340,14 @@ open class SDK {
      * @param recommender_code Recommendation block code
      * @param listener Callback
      */
+    @Deprecated(
+        "This method will be removed in future versions. Use recommendationManager.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "recommendationManager.getRecommendation(recommender_code, listener)"
+        )
+    )
     fun recommend(recommender_code: String, listener: OnApiCallbackListener) {
-        recommend(recommender_code, Params(), listener)
+        recommendationManager.getRecommendation(recommender_code, listener)
     }
 
     /**
@@ -313,8 +357,14 @@ open class SDK {
      * @param params Parameters for the request
      * @param listener Callback
      */
+    @Deprecated(
+        "This method will be removed in future versions. Use recommendationManager.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "recommendationManager.getRecommendation(code, params, listener)"
+        )
+    )
     fun recommend(code: String, params: Params, listener: OnApiCallbackListener) {
-        getAsync("recommend/$code", params.build(), listener)
+        recommendationManager.getRecommendation(code, params, listener)
     }
 
     /**
@@ -323,8 +373,14 @@ open class SDK {
      * @param event Event type
      * @param itemId Product ID
      */
+    @Deprecated(
+        "This method will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "trackEventManager.track(event, itemId)"
+        )
+    )
     fun track(event: TrackEvent, itemId: String) {
-        track(event, Params().put(Params.Item(itemId)), null)
+        trackEventManager.track(event, itemId)
     }
 
     /**
@@ -334,19 +390,14 @@ open class SDK {
      * @param params Parameters for the request
      * @param listener Callback
      */
-    /**
-     * Event tracking
-     *
-     * @param event Event type
-     * @param params Parameters
-     */
+    @Deprecated(
+        "This method will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "trackEventManager.track(event, params, listener)"
+        )
+    )
     fun track(event: TrackEvent, params: Params, listener: OnApiCallbackListener? = null) {
-        params.put(InternalParameter.EVENT, event.value)
-        if (lastRecommendedBy != null) {
-            params.put(lastRecommendedBy!!)
-            lastRecommendedBy = null
-        }
-        sendAsync(PUSH_FIELD, params.build(), listener)
+        trackEventManager.track(event, params, listener)
     }
 
     /**
@@ -358,20 +409,12 @@ open class SDK {
      * @param value Event value
      * @param listener Callback
      */
-    /**
-     * Tracking custom events
-     *
-     * @param event Event key
-     */
-    /**
-     * Tracking custom events
-     *
-     * @param event Event key
-     * @param category Event category
-     * @param label Event label
-     * @param value Event value
-     */
-    @JvmOverloads
+    @Deprecated(
+        "This method will be removed in future versions.",
+        level = DeprecationLevel.WARNING, replaceWith = ReplaceWith(
+            "trackEventManager.track(event, category, label, value, listener)"
+        )
+    )
     fun track(
         event: String,
         category: String? = null,
@@ -379,18 +422,7 @@ open class SDK {
         value: Int? = null,
         listener: OnApiCallbackListener? = null
     ) {
-        val params = Params()
-        params.put(InternalParameter.EVENT, event)
-        if (category != null) {
-            params.put(InternalParameter.CATEGORY, category)
-        }
-        if (label != null) {
-            params.put(InternalParameter.LABEL, label)
-        }
-        if (value != null) {
-            params.put(InternalParameter.VALUE, value)
-        }
-        sendAsync(CUSTOM_PUSH_FIELD, params.build(), listener)
+        trackEventManager.track(event, category, label, value, listener)
     }
 
     /**
@@ -729,7 +761,7 @@ open class SDK {
                 params.put(CODE_FIELD, id)
             }
             if (params.length() > 0) {
-                sendAsync(TRACK_RECEIVED, params)
+                networkManager.postAsync(TRACK_RECEIVED, params)
             }
         } catch (e: JSONException) {
             Log.e(TAG, e.message, e)
@@ -756,7 +788,6 @@ open class SDK {
         private const val TRACK_STORY_ID_FIELD = "story_id"
         private const val TRACK_SLIDE_ID_FIELD = "slide_id"
         private const val TRACK_RECEIVED = "track/received"
-        private const val CUSTOM_PUSH_FIELD = "push/custom"
         private const val SET_PROFILE_FIELD = "profile/set"
         private const val SEGMENT_ID_FIELD = "segment_id"
         private const val SEGMENT_EMAIL_FIELD = "email"
@@ -775,7 +806,6 @@ open class SDK {
         private const val CODE_FIELD = "code"
         private const val INIT_FIELD = "init"
         private const val TYPE_FIELD = "type"
-        private const val PUSH_FIELD = "push"
         private const val ADD_FIELD = "add"
         private const val DID_FIELD = "did"
         private const val SID_FIELD = "sid"
