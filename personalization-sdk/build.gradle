@@ -20,6 +20,9 @@ android {
 	}
 
 	buildTypes {
+		debug {
+
+		}
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -88,9 +91,10 @@ dependencies {
 	implementation 'androidx.work:work-runtime-ktx:2.9.0'
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
-	implementation project(':data')
-	implementation project(':domain')
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
+
+	implementation project(path: ':data')
+	implementation project(path: ':domain')
 }
 
 group = 'com.personalization'
