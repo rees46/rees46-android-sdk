@@ -91,10 +91,9 @@ dependencies {
 	implementation 'androidx.work:work-runtime-ktx:2.9.0'
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
+	api project(path: ':domain')
+	api project(path: ':data')
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
-
-	implementation project(path: ':data')
-	implementation project(path: ':domain')
 }
 
 group = 'com.personalization'
