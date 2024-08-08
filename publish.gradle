@@ -18,7 +18,7 @@ def publicationNames = []
 publishing {
 	publications {
 		android.libraryVariants.all { variant ->
-			if (variant.buildType.name == 'debug') return // Prevents publishing debug library
+			if (variant.buildType.name == "debug") return // Prevents publishing debug library
 
 			if (variant.flavorName != variantName) return
 
