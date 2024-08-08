@@ -20,7 +20,9 @@ android {
 	}
 
 	buildTypes {
-		debug {}
+		debug {
+
+		}
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -89,8 +91,8 @@ dependencies {
 	implementation 'androidx.work:work-runtime-ktx:2.9.0'
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
-	implementation project(path: ':data')
-	implementation project(path: ':domain')
+	implementation project(path: ':data', configuration: 'default')
+	implementation project(path: ':domain', configuration: 'default')
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
 }
 
@@ -152,5 +154,4 @@ afterEvaluate {
 	tasks.javadoc.classpath += files(android.libraryVariants.collect { variant ->
 		variant.javaCompileProvider.get().classpath
 	})
-	from components.release
 }
