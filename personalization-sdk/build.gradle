@@ -6,7 +6,7 @@ plugins {
 	id 'kotlin-kapt'
 }
 
-version='2.0.19'
+version='2.0.18'
 
 android {
 	compileSdk 34
@@ -91,6 +91,7 @@ dependencies {
 	implementation 'androidx.work:work-runtime-ktx:2.9.0'
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
+	implementation 'com.personalization.data'
 	debugImplementation project(path: ':data', configuration: 'rees46Debug')
 	releaseImplementation project(path: ':data', configuration: 'rees46Release')
 	debugImplementation project(path: ':domain', configuration: 'rees46Debug')
