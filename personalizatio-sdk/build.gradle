@@ -69,10 +69,14 @@ android {
 }
 
 configurations {
-	rees46Debug
-	rees46Release
-	personaclickDebug
-	personaclickRelease
+	rees46Debug.extendsFrom implementation
+	rees46Release.extendsFrom implementation
+	personaclickDebug.extendsFrom implementation
+	personaclickRelease.extendsFrom implementation
+
+
+	compileClasspath.extendsFrom(rees46Debug)
+	runtimeClasspath.extendsFrom(rees46Debug)
 }
 
 dependencies {
@@ -98,8 +102,8 @@ dependencies {
 	personaclickDebug project(':data')
 	personaclickDebug project(':domain')
 
-	personaclickRelease project(path: ':data', configuration: 'personaclickRelease')
-	personaclickRelease project(path: ':domain', configuration: 'personaclickRelease')
+	personaclickRelease project(':data')
+	personaclickRelease project(':domain')
 
 	rees46Release project(':data')
 	rees46Release project(':domain')
