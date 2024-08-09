@@ -73,6 +73,7 @@ jobs:
     uses: rees46/workflow/.github/workflows/reusable-android-release.yaml@master
     permissions: write-all
     with:
+      appId: ${{ vars.PUBLIVERSIONER_ID }}
       PROPERTIES_FILE: gradle.properties
       SIGNING_SECRET_KEY_RING_FILE: com.rees46.key.gpg
       SIGNING_SECRET_KEY_RING_FILE_LOCATION: ./personalizatio-sdk
@@ -81,6 +82,7 @@ jobs:
       URL: ${{ vars.REES_REPO_URL }}
       MAVEN_REPOSITORY_URL: ${{ vars.REES_MAVEN_URL }}
     secrets:
+      appSecret: ${{ secrets.PUBLIVERSIONER_SECRET }}
       OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
       SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
       SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
