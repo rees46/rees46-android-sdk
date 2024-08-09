@@ -47,7 +47,7 @@ android {
 			ext.set("group", "com.rees46")
 			ext.set("libraryName", "com.rees46.sdk")
 			ext.set("webSite", "https://rees46.com")
-			ext.set("vcsUrl", "https://github.com/rees46/rees46-android-sdk")
+			ext.set("vcsUrl", "https://github.com/rees46/android-sdk")
 		}
 		personaclick {
 			dimension 'default'
