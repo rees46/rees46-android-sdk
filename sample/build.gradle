@@ -70,7 +70,12 @@ dependencies {
 //	rees46DebugImplementation project(path: ':personalizatio-sdk', configuration: 'rees46Debug')
 //	personaclickDebugImplementation project(path: ':personalizatio-sdk', configuration: 'personaclickDebug')
 	implementation project(':personalizatio-sdk')
-	implementation project(':data')
-	implementation project(':domain')
+
+	rees46Implementation project(':data')
+	rees46Implementation project(':domain')
+
+	personaclickImplementation project(':data')
+	personaclickImplementation project(':domain')
+
 	implementation 'androidx.core:core-ktx:1.13.1'
 }

@@ -94,6 +94,12 @@ dependencies {
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
 	implementation project(':data')
 	implementation project(':domain')
+
+	personaclickImplementation project(':data')
+	personaclickImplementation project(':domain')
+
+	rees46Implementation project(':data')
+	rees46Implementation project(':domain')
 }
 
 group = 'com.personalizatio'
