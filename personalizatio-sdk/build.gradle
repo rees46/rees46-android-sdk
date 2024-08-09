@@ -68,17 +68,6 @@ android {
 	namespace 'com.personalizatio'
 }
 
-configurations {
-	rees46Debug.extendsFrom implementation
-	rees46Release.extendsFrom implementation
-	personaclickDebug.extendsFrom implementation
-	personaclickRelease.extendsFrom implementation
-
-
-	compileClasspath.extendsFrom(rees46Debug)
-	runtimeClasspath.extendsFrom(rees46Debug)
-}
-
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -96,20 +85,37 @@ dependencies {
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
-//	implementation project(':data')
+
+	implementation project(path: ':data', configuration: 'rees46Debug')
+	implementation project(path: ':domain', configuration: 'rees46Debug')
+
+	implementation project(path: ':data', configuration: 'rees46Release')
+	implementation project(path: ':domain', configuration: 'rees46Release')
+
+	implementation project(path: ':data', configuration: 'personaclickDebug')
+	implementation project(path: ':domain', configuration: 'personaclickDebug')
+
+	implementation project(path: ':data', configuration: 'personaclickRelease')
+	implementation project(path: ':domain', configuration: 'personaclickRelease')
 //	implementation project(':domain')
 
-	personaclickDebug project(':data')
-	personaclickDebug project(':domain')
+//	personaclickDebug project(':data')
+//	personaclickDebug(':domain')
+//	personaclickDebug(":domain")
+//	personaclickDebug project(":domain")
 
-	personaclickRelease project(':data')
-	personaclickRelease project(':domain')
+	//testDebugImplementation project(':data')
 
-	rees46Release project(':data')
-	rees46Release project(':domain')
+	//debugImplementation project(':data')
 
-	rees46Debug project(':data')
-	rees46Debug project(':domain')
+//	personaclickRelease project(':data')
+//	personaclickRelease project(':domain')
+//
+//	rees46Release project(':data')
+//	rees46Release project(':domain')
+//
+//	rees46Debug project(':data')
+//	rees46Debug project(':domain')
 }
 
 group = 'com.personalizatio'
