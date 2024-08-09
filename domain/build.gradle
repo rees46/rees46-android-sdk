@@ -23,15 +23,15 @@ android {
         }
     }
 
-    flavorDimensions "default"
-    productFlavors {
-        rees46 {
-            dimension 'default'
-        }
-        personaclick {
-            dimension 'default'
-        }
-    }
+//    flavorDimensions "default"
+//    productFlavors {
+//        rees46 {
+//            dimension 'default'
+//        }
+//        personaclick {
+//            dimension 'default'
+//        }
+//    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
