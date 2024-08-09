@@ -30,13 +30,6 @@ android {
     }
 }
 
-configurations {
-    rees46Debug
-    rees46Release
-    personaclickDebug
-    personaclickRelease
-}
-
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.13.1'
