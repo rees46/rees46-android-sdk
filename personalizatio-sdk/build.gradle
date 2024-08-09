@@ -95,23 +95,17 @@ dependencies {
 	implementation project(':data')
 	implementation project(':domain')
 
-//	personaclickImplementation project(':data')
-//	personaclickImplementation project(':domain')
+	personaclickDebug project(path: ':data', configuration: 'personaclickDebug')
+	personaclickDebug project(path: ':domain', configuration: 'personaclickDebug')
 
-	personaclickDebugImplementation project(':data')
-	personaclickDebugImplementation project(':domain')
-
-	personaclickReleaseImplementation project(':data')
-	personaclickReleaseImplementation project(':domain')
+	personaclickRelease project(path: ':data', configuration: 'personaclickRelease')
+	personaclickRelease project(path: ':domain', configuration: 'personaclickRelease')
 
 	rees46Release project(':data')
 	rees46Release project(':domain')
 
 	rees46Debug project(':data')
 	rees46Debug project(':domain')
-
-	rees46Implementation project(':data')
-	rees46Implementation project(':domain')
 }
 
 group = 'com.personalizatio'
