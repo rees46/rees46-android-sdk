@@ -95,8 +95,8 @@ dependencies {
 	implementation project(':data')
 	implementation project(':domain')
 
-	personaclickDebug project(path: ':data', configuration: 'personaclickDebug')
-	personaclickDebug project(path: ':domain', configuration: 'personaclickDebug')
+	personaclickDebug project(':data')
+	personaclickDebug project(':domain')
 
 	personaclickRelease project(path: ':data', configuration: 'personaclickRelease')
 	personaclickRelease project(path: ':domain', configuration: 'personaclickRelease')
