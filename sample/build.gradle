@@ -48,9 +48,7 @@ android {
 		targetCompatibility JavaVersion.VERSION_17
 	}
 	namespace 'com.personalizatio.sample'
-	kotlinOptions {
-		jvmTarget = '17'
-	}
+
 }
 
 configurations {
