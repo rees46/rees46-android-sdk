@@ -95,14 +95,14 @@ dependencies {
 	implementation project(':data')
 	implementation project(':domain')
 
-	personaclickImplementation project(':data')
-	personaclickImplementation project(':domain')
+//	personaclickImplementation project(':data')
+//	personaclickImplementation project(':domain')
 
-	personaclickDebug project(':data')
-	personaclickDebug project(':domain')
+	personaclickDebugImplementation project(':data')
+	personaclickDebugImplementation project(':domain')
 
-	personaclickRelease project(':data')
-	personaclickRelease project(':domain')
+	personaclickReleaseImplementation project(':data')
+	personaclickReleaseImplementation project(':domain')
 
 	rees46Release project(':data')
 	rees46Release project(':domain')
