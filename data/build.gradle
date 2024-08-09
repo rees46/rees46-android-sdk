@@ -28,6 +28,16 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
+
+    flavorDimensions "default"
+    productFlavors {
+        rees46 {
+            dimension 'default'
+        }
+        personaclick {
+            dimension 'default'
+        }
+    }
 }
 
 dependencies {
