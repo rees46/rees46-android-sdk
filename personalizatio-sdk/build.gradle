@@ -22,6 +22,7 @@ android {
 	}
 
 	buildTypes {
+		debug {}
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -68,6 +69,14 @@ android {
 	namespace 'com.personalizatio'
 }
 
+configurations {
+
+	rees46Debug
+	rees46Release
+	personaclickDebug
+	personaclickRelease
+}
+
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -84,38 +93,9 @@ dependencies {
 	implementation 'androidx.work:work-runtime-ktx:2.9.0'
 	implementation 'com.google.code.gson:gson:2.11.0'
 	implementation 'com.google.dagger:dagger:2.51.1'
+	implementation project(':data')
+	implementation project(':domain')
 	kapt 'com.google.dagger:dagger-compiler:2.46.1'
-
-	implementation project(path: ':data', configuration: 'rees46Debug')
-	implementation project(path: ':domain', configuration: 'rees46Debug')
-
-	implementation project(path: ':data', configuration: 'rees46Release')
-	implementation project(path: ':domain', configuration: 'rees46Release')
-
-	implementation project(path: ':data', configuration: 'personaclickDebug')
-	implementation project(path: ':domain', configuration: 'personaclickDebug')
-
-	implementation project(path: ':data', configuration: 'personaclickRelease')
-	implementation project(path: ':domain', configuration: 'personaclickRelease')
-//	implementation project(':domain')
-
-//	personaclickDebug project(':data')
-//	personaclickDebug(':domain')
-//	personaclickDebug(":domain")
-//	personaclickDebug project(":domain")
-
-	//testDebugImplementation project(':data')
-
-	//debugImplementation project(':data')
-
-//	personaclickRelease project(':data')
-//	personaclickRelease project(':domain')
-//
-//	rees46Release project(':data')
-//	rees46Release project(':domain')
-//
-//	rees46Debug project(':data')
-//	rees46Debug project(':domain')
 }
 
 group = 'com.personalizatio'
