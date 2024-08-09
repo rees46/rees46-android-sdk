@@ -98,6 +98,18 @@ dependencies {
 	personaclickImplementation project(':data')
 	personaclickImplementation project(':domain')
 
+	personaclickDebug project(':data')
+	personaclickDebug project(':domain')
+
+	personaclickRelease project(':data')
+	personaclickRelease project(':domain')
+
+	rees46Release project(':data')
+	rees46Release project(':domain')
+
+	rees46Debug project(':data')
+	rees46Debug project(':domain')
+
 	rees46Implementation project(':data')
 	rees46Implementation project(':domain')
 }

@@ -16,11 +16,23 @@ android {
     }
 
     buildTypes {
+        debug {  }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "default"
+    productFlavors {
+        rees46 {
+            dimension 'default'
+        }
+        personaclick {
+            dimension 'default'
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -29,8 +41,6 @@ android {
     kotlinOptions {
         jvmTarget = '17'
     }
-
-    flavorDimensions "default"
 }
 
 dependencies {
