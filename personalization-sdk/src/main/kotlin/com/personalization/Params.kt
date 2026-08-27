@@ -36,6 +36,7 @@ class Params : AbstractParams<Params>() {
         CATEGORY_ID("category_id"),
         CATEGORY("category"),
         SEARCH_QUERY("search_query"),
+        RESULTS("results"),
         EXTENDED("extended"),
         WITH_LOCATIONS("with_locations"),
     }
@@ -153,7 +154,9 @@ class Params : AbstractParams<Params>() {
     }
 
     internal fun put(recommendedBy: com.personalization.sdk.domain.models.RecommendedBy): Params {
-        return putRecommendedBy(recommendedBy.type.toString(), recommendedBy.code)
+        // `toString()` on the enum yields its name (RECOMMENDATION); the API expects the wire
+        // value (dynamic) and answers 422 for anything else.
+        return putRecommendedBy(recommendedBy.type.value, recommendedBy.code)
     }
 
     private fun putRecommendedBy(type: String, code: String?): Params {

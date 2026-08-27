@@ -30,6 +30,10 @@ class StoriesManager @Inject constructor(
 
     private var lastAttachedView: WeakReference<StoriesView>? = null
 
+    /** The block the SDK last requested — the fallback for tracking calls that omit the code. */
+    @Volatile
+    private var lastRequestedCode: String? = null
+
     /** Records the surface [SDK.showStories] presents from. Not used for loading. */
     internal fun rememberAttachedView(storiesView: StoriesView) {
         lastAttachedView = WeakReference(storiesView)
@@ -82,6 +86,7 @@ class StoriesManager @Inject constructor(
     }
 
     internal fun requestStories(code: String, listener: OnApiCallbackListener) {
+        lastRequestedCode = code
         sendNetworkMethodUseCase.getAsync(
             method = String.format(REQUEST_STORIES_METHOD, code),
             params = JSONObject(),
@@ -99,18 +104,46 @@ class StoriesManager @Inject constructor(
      * @param slideId Slide ID
      */
     internal fun trackStory(event: String, code: String, storyId: Int, slideId: String) {
+        trackStory(
+            event = event,
+            code = code,
+            storyId = storyId.toString(),
+            slideId = slideId,
+            listener = null
+        )
+    }
+
+    /**
+     * Story event with the story id as a string — the shape the `tracking` namespace speaks.
+     * A numeric id still goes on the wire as a number, so the request is unchanged.
+     *
+     * [code] falls back to the block the SDK last requested; without either the event is dropped,
+     * since the backend attributes it to a block.
+     */
+    internal fun trackStory(
+        event: String,
+        code: String?,
+        storyId: String,
+        slideId: String,
+        listener: OnApiCallbackListener? = null
+    ) {
+        val effectiveCode = code ?: lastRequestedCode
+        if (effectiveCode == null) {
+            Log.w(SDK.TAG, "trackStory($event): no stories code given and no block loaded yet")
+            return
+        }
         try {
             val params = JSONObject()
             params.put(EVENT_PARAMS_NAME, event)
-            params.put(STORY_ID_PARAMS_NAME, storyId)
+            params.put(STORY_ID_PARAMS_NAME, storyId.toIntOrNull() ?: storyId)
             params.put(SLIDE_ID_PARAMS_NAME, slideId)
-            params.put(CODE_PARAMS_NAME, code)
+            params.put(CODE_PARAMS_NAME, effectiveCode)
 
-            setRecommendedByUseCase(RecommendedBy(RecommendedBy.TYPE.STORIES, code))
+            setRecommendedByUseCase(RecommendedBy(RecommendedBy.TYPE.STORIES, effectiveCode))
 
-            sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, null)
+            sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, listener)
         } catch (e: JSONException) {
-            e.printStackTrace()
+            Log.e(SDK.TAG, e.message, e)
         }
     }
 

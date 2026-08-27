@@ -15,6 +15,7 @@ import com.personalization.api.managers.RecommendationManager
 import com.personalization.api.managers.PredictManager
 import com.personalization.api.managers.SearchManager
 import com.personalization.api.managers.TrackEventManager
+import com.personalization.api.managers.TrackingApi
 import com.personalization.features.cart.CartManagerImpl
 import com.personalization.features.category.impl.CategoryManagerImpl
 import com.personalization.features.collection.impl.CollectionManagerImpl
@@ -28,6 +29,7 @@ import com.personalization.features.profile.impl.ProfileManagerImpl
 import com.personalization.features.recommendation.impl.RecommendationManagerImpl
 import com.personalization.features.search.impl.SearchManagerImpl
 import com.personalization.features.trackEvent.impl.TrackEventManagerImpl
+import com.personalization.features.tracking.impl.TrackingApiImpl
 import com.personalization.sdk.domain.usecases.network.ExecuteQueueTasksUseCase
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
 import com.personalization.sdk.domain.usecases.recommendation.GetRecommendedByUseCase
@@ -98,6 +100,18 @@ class SdkModule {
         sendNetworkMethodUseCase = sendNetworkMethodUseCase,
         inAppNotificationManager = inAppNotificationManager,
         getUserSettingsValueUseCase = getUserSettingsValueUseCase
+    )
+
+    @Singleton
+    @Provides
+    fun provideTrackingApi(
+        trackEventManager: TrackEventManager,
+        storiesManager: StoriesManager,
+        setRecommendedByUseCase: SetRecommendedByUseCase
+    ): TrackingApi = TrackingApiImpl(
+        trackEventManager = trackEventManager,
+        storiesManager = storiesManager,
+        setRecommendedByUseCase = setRecommendedByUseCase
     )
 
     @Singleton

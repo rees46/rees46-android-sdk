@@ -49,6 +49,10 @@ internal class TrackEventManagerImpl @Inject constructor(
                 }
                 listener?.onSuccess(response)
             }
+
+            override fun onError(code: Int, msg: String?) {
+                listener?.onError(code, msg)
+            }
         }
 
         sendNetworkMethodUseCase.postAsync(
@@ -82,6 +86,10 @@ internal class TrackEventManagerImpl @Inject constructor(
                     handlePopup(response)
                 }
                 listener?.onSuccess(response)
+            }
+
+            override fun onError(code: Int, msg: String?) {
+                listener?.onError(code, msg)
             }
         }
 
@@ -203,6 +211,10 @@ internal class TrackEventManagerImpl @Inject constructor(
                     handlePopup(response)
                 }
                 listener?.onSuccess(response)
+            }
+
+            override fun onError(code: Int, msg: String?) {
+                listener?.onError(code, msg)
             }
         }
 
