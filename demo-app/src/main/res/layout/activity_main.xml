@@ -201,6 +201,92 @@
                 android:text="@string/get_collection"
                 android:layout_marginTop="16dp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/tracking_namespace_title"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnTrackingProductView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_product_view"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingCategoryView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_category_view"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_search"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingAddToCart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_add_to_cart"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingSyncCart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_sync_cart"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingRemoveFromCart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_remove_from_cart"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingAddToFavorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_add_to_favorites"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingSyncFavorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_sync_favorites"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingRemoveFromFavorites"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_remove_from_favorites"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnTrackingSetSource"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tracking_set_source"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/tvTrackingNamespaceResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/tracking_namespace_result_placeholder"
+                android:textIsSelectable="true"
+                android:typeface="monospace" />
+
         </LinearLayout>
 
     </ScrollView>

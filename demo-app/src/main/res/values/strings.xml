@@ -103,4 +103,16 @@
     <string name="mi_btn_push_unknown">push shop_id=unknown</string>
     <string name="mi_btn_push_none">push (no shop_id)</string>
     <string name="mi_log_placeholder">Results of contract and push-routing actions appear here</string>
+    <string name="tracking_namespace_title">Tracking namespace (sdk.tracking)</string>
+    <string name="tracking_namespace_result_placeholder">—</string>
+    <string name="tracking_product_view">Tracking: product view</string>
+    <string name="tracking_category_view">Tracking: category view</string>
+    <string name="tracking_search">Tracking: search</string>
+    <string name="tracking_add_to_cart">Tracking: add to cart</string>
+    <string name="tracking_sync_cart">Tracking: sync cart</string>
+    <string name="tracking_remove_from_cart">Tracking: remove from cart</string>
+    <string name="tracking_add_to_favorites">Tracking: add to favorites</string>
+    <string name="tracking_sync_favorites">Tracking: sync favorites</string>
+    <string name="tracking_remove_from_favorites">Tracking: remove from favorites</string>
+    <string name="tracking_set_source">Tracking: set source</string>
 </resources>
