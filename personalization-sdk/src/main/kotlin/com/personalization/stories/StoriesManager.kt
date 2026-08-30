@@ -117,8 +117,10 @@ class StoriesManager @Inject constructor(
      * Story event with the story id as a string — the shape the `tracking` namespace speaks.
      * A numeric id still goes on the wire as a number, so the request is unchanged.
      *
-     * [code] falls back to the block the SDK last requested; without either the event is dropped,
-     * since the backend attributes it to a block.
+     * [code] falls back to the block the SDK last requested; without either the event cannot be sent,
+     * since the backend attributes it to a block. Every path that gives up reports through [listener]
+     * rather than returning silently — a caller awaiting the callback (the Flutter bridge does) would
+     * otherwise wait forever.
      */
     internal fun trackStory(
         event: String,
@@ -129,13 +131,15 @@ class StoriesManager @Inject constructor(
     ) {
         val effectiveCode = code ?: lastRequestedCode
         if (effectiveCode == null) {
-            Log.w(SDK.TAG, "trackStory($event): no stories code given and no block loaded yet")
+            val message = "trackStory($event): no stories code given and no block loaded yet"
+            Log.w(SDK.TAG, message)
+            listener?.onError(CLIENT_VALIDATION_ERROR_CODE, message)
             return
         }
         try {
             val params = JSONObject()
             params.put(EVENT_PARAMS_NAME, event)
-            params.put(STORY_ID_PARAMS_NAME, storyId.toIntOrNull() ?: storyId)
+            params.put(STORY_ID_PARAMS_NAME, storyId.asWireStoryId())
             params.put(SLIDE_ID_PARAMS_NAME, slideId)
             params.put(CODE_PARAMS_NAME, effectiveCode)
 
@@ -144,8 +148,17 @@ class StoriesManager @Inject constructor(
             sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, listener)
         } catch (e: JSONException) {
             Log.e(SDK.TAG, e.message, e)
+            listener?.onError(CLIENT_VALIDATION_ERROR_CODE, e.message)
         }
     }
+
+    /**
+     * A numeric id keeps going on the wire as a number, the way `trackStory(storyId: Int)` always sent
+     * it. Converted only when the number renders back to the same text, so ids like `"0123"` — which
+     * `toInt()` would turn into `123` — stay strings instead of being silently rewritten.
+     */
+    private fun String.asWireStoryId(): Any =
+        toIntOrNull()?.takeIf { it.toString() == this } ?: this
 
     private fun getStories(json: JSONObject): List<Story> {
         val stories = ArrayList<Story>()
@@ -188,5 +201,12 @@ class StoriesManager @Inject constructor(
         const val STORY_ID_PARAMS_NAME = "story_id"
         const val SLIDE_ID_PARAMS_NAME = "slide_id"
         const val CODE_PARAMS_NAME = "code"
+
+        /**
+         * Reported when the SDK rejects a story event before it reaches the network — same negative
+         * code the other client-side validations use, so a caller can tell "we never sent this" from
+         * an HTTP status.
+         */
+        const val CLIENT_VALIDATION_ERROR_CODE: Int = -1
     }
 }

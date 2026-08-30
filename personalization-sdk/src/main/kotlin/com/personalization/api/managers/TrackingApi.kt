@@ -28,7 +28,8 @@ interface TrackingApi {
     /**
      * Search query issued by the user (`search`).
      *
-     * Pass [results] when the host runs its own search and knows the ids it showed.
+     * Pass [results] when the host runs its own search and knows the ids it showed. They go on the
+     * wire as one comma-separated field, so ids must not themselves contain a comma.
      */
     fun search(
         query: String,
@@ -43,7 +44,12 @@ interface TrackingApi {
         listener: OnApiCallbackListener? = null,
     )
 
-    /** Full cart contents after a change (`cart` with `full_cart`). */
+    /**
+     * Full cart contents after a change (`cart` with `full_cart`).
+     *
+     * Pass an empty list when the cart was emptied — the request then carries an empty `items` list,
+     * which is how the backend learns the cart is gone.
+     */
     fun syncCart(
         items: List<TrackingItem>,
         listener: OnApiCallbackListener? = null,
@@ -95,7 +101,11 @@ interface TrackingApi {
         listener: OnApiCallbackListener? = null,
     )
 
-    /** Completed order (`purchase`). */
+    /**
+     * Completed order (`purchase`).
+     *
+     * [source] attributes the order; an attribution already set on [request] wins over it.
+     */
     fun purchase(
         request: PurchaseTrackingRequest,
         source: TrackingSource? = null,
@@ -119,10 +129,12 @@ interface TrackingApi {
     )
 
     /**
-     * Stores the attribution source for the next event.
+     * Stores the attribution source and attaches it to the next event.
      *
-     * Use it when the source outlives a single call — a user entering the catalog from a
-     * recommender block. For a single event prefer the `source` parameter.
+     * Use it when the source outlives a single call — a user entering the catalog from a recommender
+     * block. For a single event prefer the `source` parameter, which behaves identically on every
+     * platform; the stored source is per instance, but its lifetime is platform-specific (iOS keeps
+     * it for 48 hours and colours every event in that window, Android applies it once).
      */
     fun setSource(source: TrackingSource)
 }

@@ -2,6 +2,7 @@ package com.personalization.features.tracking.impl
 
 import com.personalization.Params
 import com.personalization.Params.TrackEvent
+import com.personalization.api.OnApiCallbackListener
 import com.personalization.api.managers.InAppNotificationManager
 import com.personalization.api.managers.TrackingApi
 import com.personalization.api.models.purchase.PurchaseItemRequest
@@ -43,6 +44,7 @@ class TrackingApiImplTest {
 
     private lateinit var sendNetworkMethodUseCase: SendNetworkMethodUseCase
     private lateinit var setRecommendedByUseCase: SetRecommendedByUseCase
+    private lateinit var getRecommendedByUseCase: GetRecommendedByUseCase
     private lateinit var storiesManager: StoriesManager
     private lateinit var trackEventManager: TrackEventManagerImpl
     private lateinit var tracking: TrackingApi
@@ -51,7 +53,7 @@ class TrackingApiImplTest {
     fun setUp() {
         sendNetworkMethodUseCase = mockk(relaxed = true)
         setRecommendedByUseCase = mockk(relaxed = true)
-        val getRecommendedByUseCase = mockk<GetRecommendedByUseCase>(relaxed = true)
+        getRecommendedByUseCase = mockk(relaxed = true)
         every { getRecommendedByUseCase.invoke() } returns null
 
         trackEventManager = TrackEventManagerImpl(
@@ -210,8 +212,18 @@ class TrackingApiImplTest {
     }
 
     @Test
-    fun storyView_withoutAnyCode_isDropped() {
-        tracking.storyView(storyId = "42", slideId = "3")
+    fun storyView_withoutAnyCode_isDroppedAndReported() {
+        var errorCode: Int? = null
+        var errorMessage: String? = null
+        val listener = object : OnApiCallbackListener() {
+            override fun onSuccess(response: JSONObject?) = Unit
+            override fun onError(code: Int, msg: String?) {
+                errorCode = code
+                errorMessage = msg
+            }
+        }
+
+        tracking.storyView(storyId = "42", slideId = "3", listener = listener)
 
         verify(exactly = 0) {
             sendNetworkMethodUseCase.postAsync(
@@ -220,6 +232,22 @@ class TrackingApiImplTest {
                 any()
             )
         }
+        // Silence here would hang any caller awaiting the callback — the Flutter bridge turns this
+        // listener into a Future.
+        assertEquals(StoriesManager.CLIENT_VALIDATION_ERROR_CODE, errorCode)
+        assertTrue(errorMessage.orEmpty().contains("no stories code"))
+    }
+
+    @Test
+    fun storyId_thatIsNotACleanNumber_staysAString() {
+        tracking.storyView(storyId = "0123", slideId = "3", code = "main_stories")
+
+        val body = capturedBody(path = StoriesManager.TRACK_STORIES_METHOD)
+        assertEquals("0123", body.getString("story_id"))
+
+        tracking.storyView(storyId = "42", slideId = "3", code = "main_stories")
+
+        assertEquals(42, capturedBody(path = StoriesManager.TRACK_STORIES_METHOD).getInt("story_id"))
     }
 
     // endregion
@@ -351,4 +379,87 @@ class TrackingApiImplTest {
         assertNull(item.price)
         assertNull(item.fashionSize)
     }
+
+    // region regressions found in review
+
+    @Test
+    fun syncCart_withNothingLeft_sendsAnEmptyItemList() {
+        tracking.syncCart(emptyList())
+
+        val body = capturedBody(path = "push")
+        assertTrue("full_cart must say the list is authoritative", body.getBoolean("full_cart"))
+        assertEquals(
+            "an emptied cart has to be sent as an empty list, not as a missing one",
+            0,
+            body.getJSONArray("items").length()
+        )
+    }
+
+    @Test
+    fun syncFavorites_withNothingLeft_sendsAnEmptyItemList() {
+        tracking.syncFavorites(emptyList())
+
+        val body = capturedBody(path = "push")
+        assertTrue(body.getBoolean("full_wish"))
+        assertEquals(0, body.getJSONArray("items").length())
+    }
+
+    @Test
+    fun webPushDigestSource_usesItsOwnCodeField() {
+        tracking.productView(
+            itemId = "sku-1",
+            source = TrackingSource(TrackingSourceType.WEB_PUSH_DIGEST, "digest-7")
+        )
+
+        val body = capturedBody(path = "push")
+        assertEquals("web_push_digest", body.getString("recommended_by"))
+        assertEquals("digest-7", body.getString("web_push_digest_code"))
+        assertFalse(body.has("recommended_code"))
+    }
+
+    @Test
+    fun purchase_keepsAnAttributionTheRequestAlreadyCarries() {
+        val request = PurchaseTrackingRequest(
+            orderId = "order-1",
+            orderPrice = 100.0,
+            items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0)),
+            recommendedBy = Params.RecommendedBy(Params.RecommendedBy.TYPE.TRIGGER, "from-request")
+        )
+
+        tracking.purchase(request, source = TrackingSource(TrackingSourceType.DYNAMIC, "from-call"))
+
+        val body = capturedBody(path = "push")
+        assertEquals("chain", body.getString("recommended_by"))
+        assertEquals("from-request", body.getString("recommended_code"))
+    }
+
+    @Test
+    fun purchase_takesTheSourceWhenTheRequestHasNone() {
+        val request = PurchaseTrackingRequest(
+            orderId = "order-1",
+            orderPrice = 100.0,
+            items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0))
+        )
+        // Model the real store-then-consume cycle so the assertion can read the wire.
+        var pending: RecommendedBy? = null
+        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
+        every { getRecommendedByUseCase.invoke() } answers { pending }
+
+        tracking.purchase(request, source = TrackingSource(TrackingSourceType.FULL_SEARCH, "boots"))
+
+        val body = capturedBody(path = "push")
+        assertEquals("full_search", body.getString("recommended_by"))
+        assertEquals("boots", body.getString("recommended_code"))
+        assertNull("the source is consumed by this one order", pending)
+    }
+
+    @Test
+    fun aPriceOverTenMillion_isNotSentInScientificNotation() {
+        tracking.addToCart(TrackingItem(id = "sku-1", price = 12_000_000.0))
+
+        val item = capturedBody(path = "push").getJSONArray("items").getJSONObject(0)
+        assertEquals("12000000", item.getString("price"))
+    }
+
+    // endregion
 }

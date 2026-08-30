@@ -8,11 +8,12 @@ import com.personalization.api.managers.TrackingApi
 import com.personalization.api.models.purchase.PurchaseTrackingRequest
 import com.personalization.api.models.tracking.TrackingItem
 import com.personalization.api.models.tracking.TrackingSource
-import com.personalization.api.models.tracking.toParamsRecommendedBy
+import com.personalization.api.models.tracking.putSource
 import com.personalization.api.params.ProductItemParams
 import com.personalization.sdk.domain.models.RecommendedBy
 import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
 import com.personalization.stories.StoriesManager
+import org.json.JSONArray
 import javax.inject.Inject
 
 /**
@@ -55,7 +56,7 @@ internal class TrackingApiImpl @Inject constructor(
     ) {
         val params = Params().put(Params.Parameter.SEARCH_QUERY, query)
         if (!results.isNullOrEmpty()) {
-            params.put(Params.Parameter.RESULTS, results.joinToString(separator = ","))
+            params.put(Params.RESULTS_PARAM, results.joinToString(separator = ","))
         }
         trackEventManager.track(event = TrackEvent.SEARCH, params = params, listener = listener)
     }
@@ -75,6 +76,7 @@ internal class TrackingApiImpl @Inject constructor(
     override fun syncCart(items: List<TrackingItem>, listener: OnApiCallbackListener?) {
         val params = Params()
         items.forEach { params.put(it.toProductParams()) }
+        params.putEmptyItemsIfNone()
         params.put(Params.Parameter.FULL_CART, true)
         trackEventManager.track(event = TrackEvent.CART, params = params, listener = listener)
     }
@@ -102,6 +104,7 @@ internal class TrackingApiImpl @Inject constructor(
     override fun syncFavorites(itemIds: List<String>, listener: OnApiCallbackListener?) {
         val params = Params()
         itemIds.forEach { params.put(ProductItemParams(it)) }
+        params.putEmptyItemsIfNone()
         params.put(Params.Parameter.FULL_WISH, true)
         trackEventManager.track(event = TrackEvent.WISH, params = params, listener = listener)
     }
@@ -149,10 +152,15 @@ internal class TrackingApiImpl @Inject constructor(
         source: TrackingSource?,
         listener: OnApiCallbackListener?,
     ) {
-        val attributed = source
-            ?.let { request.copy(recommendedBy = it.toParamsRecommendedBy()) }
-            ?: request
-        trackEventManager.trackPurchase(request = attributed, listener = listener)
+        // An attribution already set on the request is the more specific one — it was built with the
+        // order — so [source] only fills the gap when the caller left it empty. It is handed over as
+        // the pending source, which `trackPurchase` merges into this one request and then clears:
+        // that path speaks raw wire values, so every TrackingSourceType works, including the ones the
+        // released `Params.RecommendedBy.TYPE` has no constant for.
+        if (source != null && request.recommendedBy == null) {
+            setSource(source)
+        }
+        trackEventManager.trackPurchase(request = request, listener = listener)
     }
 
     override fun custom(
@@ -182,7 +190,16 @@ internal class TrackingApiImpl @Inject constructor(
     }
 
     private fun Params.withSource(source: TrackingSource?): Params =
-        source?.let { put(it.toParamsRecommendedBy()) } ?: this
+        source?.let { putSource(it) } ?: this
+
+    /**
+     * "The cart is now empty" is a real sync, and it has to say so: without this the request would
+     * carry `full_cart` and no `items` at all, which reads as "nothing changed". Matches iOS, which
+     * always sends the list.
+     */
+    private fun Params.putEmptyItemsIfNone() {
+        if (!build().has(ITEMS_PARAM)) build().put(ITEMS_PARAM, JSONArray())
+    }
 
     private fun TrackingItem.toProductParams(): ProductItemParams {
         val params = ProductItemParams(id).set(ProductItemParams.PARAMETER.AMOUNT, quantity)
@@ -194,5 +211,6 @@ internal class TrackingApiImpl @Inject constructor(
     private companion object {
         const val STORY_VIEW_EVENT = "view"
         const val STORY_CLICK_EVENT = "click"
+        const val ITEMS_PARAM = "items"
     }
 }

@@ -1,5 +1,7 @@
 package com.personalization.api.params
 
+import java.math.BigDecimal
+
 class ProductItemParams(id: String) {
     enum class PARAMETER(val value: String) {
         ID("id"),
@@ -23,8 +25,12 @@ class ProductItemParams(id: String) {
         return set(column, value.toString())
     }
 
+    /**
+     * `Double.toString()` switches to scientific notation from 1e7 up, so a ten-million price would
+     * go on the wire as `1.0E7`. Plain notation keeps every price readable to the backend.
+     */
     fun set(column: PARAMETER, value: Double): ProductItemParams {
-        return set(column, value.toString())
+        return set(column, BigDecimal.valueOf(value).toPlainString())
     }
 
     fun set(column: PARAMETER, value: Boolean): ProductItemParams {

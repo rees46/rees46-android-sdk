@@ -361,11 +361,13 @@ open class SDK {
      * @param storyId Story ID
      * @param slideId Slide ID
      */
+    /**
+     * No `replaceWith`: which method replaces this one depends on [event], and a quick-fix that always
+     * picked `storyView` would silently turn a tracked click into a view.
+     */
     @Deprecated(
-        message = "Use the tracking namespace: sdk.tracking.storyView(...) / storyClick(...).",
-        replaceWith = ReplaceWith(
-            "tracking.storyView(storyId = storyId.toString(), slideId = slideId, code = code)"
-        ),
+        message = "Use the tracking namespace: sdk.tracking.storyView(storyId, slideId, code) for " +
+            "\"view\" and sdk.tracking.storyClick(storyId, slideId, code) for \"click\".",
         level = DeprecationLevel.WARNING
     )
     @Suppress("DEPRECATION")

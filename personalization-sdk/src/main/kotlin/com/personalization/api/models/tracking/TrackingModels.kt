@@ -22,7 +22,14 @@ data class TrackingSource(
     val code: String,
 )
 
-/** The tool an event is attributed to (`recommended_by` on the wire). */
+/**
+ * The tool an event is attributed to (`recommended_by` on the wire).
+ *
+ * Mirrors iOS `TrackingSourceType` case for case, so the same source means the same thing on both
+ * platforms. Kept separate from the released [Params.RecommendedBy.TYPE], which is part of the public
+ * `PurchaseTrackingRequest` surface: adding a constant there would break any host with an exhaustive
+ * `when` over it. The wire value travels as a raw string instead — see `Params.putRawRecommendedBy`.
+ */
 enum class TrackingSourceType(val value: String) {
     DYNAMIC("dynamic"),
     CHAIN("chain"),
@@ -31,17 +38,8 @@ enum class TrackingSourceType(val value: String) {
     INSTANT_SEARCH("instant_search"),
     FULL_SEARCH("full_search"),
     STORIES("stories"),
+    WEB_PUSH_DIGEST("web_push_digest"),
     ;
-
-    internal fun toParamsType(): Params.RecommendedBy.TYPE = when (this) {
-        DYNAMIC -> Params.RecommendedBy.TYPE.RECOMMENDATION
-        CHAIN -> Params.RecommendedBy.TYPE.TRIGGER
-        BULK -> Params.RecommendedBy.TYPE.BULK
-        TRANSACTIONAL -> Params.RecommendedBy.TYPE.TRANSACTIONAL
-        INSTANT_SEARCH -> Params.RecommendedBy.TYPE.INSTANT_SEARCH
-        FULL_SEARCH -> Params.RecommendedBy.TYPE.FULL_SEARCH
-        STORIES -> Params.RecommendedBy.TYPE.STORIES
-    }
 
     internal fun toDomainType(): RecommendedBy.TYPE = when (this) {
         DYNAMIC -> RecommendedBy.TYPE.RECOMMENDATION
@@ -51,8 +49,10 @@ enum class TrackingSourceType(val value: String) {
         INSTANT_SEARCH -> RecommendedBy.TYPE.INSTANT_SEARCH
         FULL_SEARCH -> RecommendedBy.TYPE.FULL_SEARCH
         STORIES -> RecommendedBy.TYPE.STORIES
+        WEB_PUSH_DIGEST -> RecommendedBy.TYPE.WEB_PUSH_DIGEST
     }
 }
 
-internal fun TrackingSource.toParamsRecommendedBy(): Params.RecommendedBy =
-    Params.RecommendedBy(type.toParamsType(), code)
+/** Adds this source to [params] as `recommended_by` plus its code field. */
+internal fun Params.putSource(source: TrackingSource): Params =
+    putRawRecommendedBy(source.type.value, source.code)
