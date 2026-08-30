@@ -22,5 +22,7 @@ data class SearchFullResponse(
     @SerializedName("requests_count")
     val requestsCount: Int,
     @SerializedName("search_query")
-    val searchQuery: String
+    val searchQuery: String,
+    @SerializedName("search_query_original")
+    val searchQueryOriginal: String = ""
 )

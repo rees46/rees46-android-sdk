@@ -28,6 +28,7 @@ class SearchParams : AbstractParams<SearchParams>() {
         EXCLUDE("exclude"),
         NO_CLARIFICATION("no_clarification"),
         BRAND_LIMIT("brand_limit"),
+        CORRECTION("correction"),
     }
 
     class SearchFilters {
