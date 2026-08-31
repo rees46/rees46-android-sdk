@@ -301,8 +301,12 @@ class TrackingApiImplTest {
         assertEquals("demo-block", body.getString("recommended_code"))
     }
 
+    /**
+     * What the stored source does to the requests that follow it. A tester read `setSource` as
+     * broken, and the answer turns out to depend on which request you look at.
+     */
     @Test
-    fun setSource_isSpentByTheFirstEventOnly() {
+    fun setSource_reachesTheFirstRequestOnlyAndNotTheOnesAfter() {
         var pending: RecommendedBy? = null
         every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
         every { getRecommendedByUseCase.invoke() } answers { pending }
@@ -310,13 +314,36 @@ class TrackingApiImplTest {
         tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
         tracking.productView("sku-1")
         tracking.categoryView("cat-1")
+        tracking.addToFavorites("sku-2")
 
-        val second = capturedBody(path = "push")
-        assertEquals("category", second.getString("event"))
-        assertFalse(
-            "Android spends the stored source on one event; iOS keeps it for 48h",
-            second.has("recommended_by")
-        )
+        val bodies = capturedBodies(path = "push")
+        assertEquals(3, bodies.size)
+
+        assertEquals("dynamic", bodies[0].getString("recommended_by"))
+        assertEquals("demo-block", bodies[0].getString("recommended_code"))
+
+        // iOS keeps the same source on every request for 48h. Android drops it here.
+        assertFalse("2nd request kept the source", bodies[1].has("recommended_by"))
+        assertFalse("3rd request kept the source", bodies[2].has("recommended_by"))
+    }
+
+    /**
+     * Android sends a stored source in the same fields as a per-call one. iOS does not — there a
+     * stored source travels in a `source` object instead. Pinned so the difference is visible.
+     */
+    @Test
+    fun storedSourceUsesTheSameWireFieldsAsAPerCallSource() {
+        var pending: RecommendedBy? = null
+        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
+        every { getRecommendedByUseCase.invoke() } answers { pending }
+
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "stored-block"))
+        tracking.productView("sku-1")
+        val stored = capturedBody(path = "push")
+
+        assertEquals("dynamic", stored.getString("recommended_by"))
+        assertEquals("stored-block", stored.getString("recommended_code"))
+        assertFalse("Android has no `source` object", stored.has("source"))
     }
 
     @Test
@@ -392,6 +419,18 @@ class TrackingApiImplTest {
      * The body of the most recent post to [path]. Captured into a list rather than a slot: some
      * tests post several times, and mockk refuses slot capture for a repeated call.
      */
+    private fun capturedBodies(path: String): List<JSONObject> {
+        val bodies = mutableListOf<JSONObject>()
+        verify {
+            sendNetworkMethodUseCase.postAsync(
+                path,
+                capture(bodies),
+                any()
+            )
+        }
+        return bodies
+    }
+
     private fun capturedBody(path: String): JSONObject {
         val bodies = mutableListOf<JSONObject>()
         verify {
