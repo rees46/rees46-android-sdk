@@ -71,6 +71,29 @@ class TrackingSourceDataSourceImplTest {
         assertEquals(StoredTrackingSource("bulk", "second"), dataSource.getSource())
     }
 
+    /**
+     * Storage is partitioned per shop, so an attribution set for one instance must not colour
+     * another's events. Mirrors iOS `test_sourceSetForOneShop_isNotVisibleToAnother`.
+     */
+    @Test
+    fun aSourceSetForOneShop_isNotVisibleToAnother() {
+        val otherShop = TrackingSourceDataSourceImpl(FakePreferences())
+
+        dataSource.setSource(StoredTrackingSource(type = "dynamic", code = "shop-a-block"))
+
+        assertEquals(StoredTrackingSource("dynamic", "shop-a-block"), dataSource.getSource())
+        assertNull("a source set for one shop leaked into another", otherShop.getSource())
+    }
+
+    /** A half-written record is not an attribution. */
+    @Test
+    fun aRecordMissingItsCode_readsAsNoSource() {
+        dataSource.setSource(StoredTrackingSource(type = "dynamic", code = "popular"))
+        preferences.values["tracking_source_code"] = ""
+
+        assertNull(dataSource.getSource())
+    }
+
     /** Minimal in-memory stand-in; only the four methods the store touches are meaningful. */
     private class FakePreferences : PreferencesDataSource {
         val values = mutableMapOf<String, Any?>()

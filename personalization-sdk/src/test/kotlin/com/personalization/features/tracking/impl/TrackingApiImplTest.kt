@@ -482,6 +482,80 @@ class TrackingApiImplTest {
         assertNull(item.fashionSize)
     }
 
+    // region where the stored source is and is not attached
+
+    @Test
+    fun setSource_reachesAPurchase() {
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
+        tracking.purchase(
+            PurchaseTrackingRequest(
+                orderId = "order-1",
+                orderPrice = 100.0,
+                items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0))
+            )
+        )
+
+        val source = capturedBody(path = "push").getJSONObject("source")
+        assertEquals("dynamic", source.getString("from"))
+        assertEquals("demo-block", source.getString("code"))
+    }
+
+    /** `popup/showed` carries no attribution — the one send path iOS leaves alone too. */
+    @Test
+    fun aStoredSource_doesNotReachPopupShown() {
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
+        trackEventManager.trackPopupShown(popupId = 7, listener = null)
+
+        assertFalse(capturedBody(path = "popup/showed").has("source"))
+    }
+
+    @Test
+    fun withNoSourceStored_requestsCarryNoSourceField() {
+        tracking.productView("sku-1")
+
+        assertFalse(capturedBody(path = "push").has("source"))
+    }
+
+    @Test
+    fun anExpiredSource_neverReachesTheWire() {
+        // What the store returns once its window has closed; see TrackingSourceDataSourceImplTest.
+        every { getTrackingSourceUseCase.invoke() } returns null
+
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "stale"))
+        tracking.productView("sku-1")
+
+        assertFalse(capturedBody(path = "push").has("source"))
+    }
+
+    @Test
+    fun aStoryClick_alsoMakesItsBlockTheSource() {
+        tracking.storyClick(storyId = "42", slideId = "3", code = "main_stories")
+        tracking.productView("sku-1")
+
+        val source = capturedBody(path = "push").getJSONObject("source")
+        assertEquals("stories", source.getString("from"))
+        assertEquals("main_stories", source.getString("code"))
+    }
+
+    @Test
+    fun aStoryWithNoCodeAtAll_storesNothing() {
+        tracking.storyView(storyId = "42", slideId = "3")
+
+        verify(exactly = 0) { setTrackingSourceUseCase.invoke(any(), any()) }
+    }
+
+    @Test
+    fun aRawSourceTypeTheReleasedEnumLacks_survivesTheRoundTrip() {
+        tracking.setSource(TrackingSource(TrackingSourceType.WEB_PUSH_DIGEST, "digest-7"))
+        tracking.productView("sku-1")
+
+        val source = capturedBody(path = "push").getJSONObject("source")
+        assertEquals("web_push_digest", source.getString("from"))
+        assertEquals("digest-7", source.getString("code"))
+    }
+
+    // endregion
+
     // region regressions found in review
 
     @Test
