@@ -286,6 +286,39 @@ class TrackingApiImplTest {
         assertEquals("popular", body.getString("recommended_code"))
     }
 
+    /** The tester's flow: tap "set source", then tap an event, and look at what went out. */
+    @Test
+    fun setSource_thenAnEvent_putsTheSourceOnTheWire() {
+        var pending: RecommendedBy? = null
+        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
+        every { getRecommendedByUseCase.invoke() } answers { pending }
+
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
+        tracking.productView("sku-1")
+
+        val body = capturedBody(path = "push")
+        assertEquals("dynamic", body.getString("recommended_by"))
+        assertEquals("demo-block", body.getString("recommended_code"))
+    }
+
+    @Test
+    fun setSource_isSpentByTheFirstEventOnly() {
+        var pending: RecommendedBy? = null
+        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
+        every { getRecommendedByUseCase.invoke() } answers { pending }
+
+        tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
+        tracking.productView("sku-1")
+        tracking.categoryView("cat-1")
+
+        val second = capturedBody(path = "push")
+        assertEquals("category", second.getString("event"))
+        assertFalse(
+            "Android spends the stored source on one event; iOS keeps it for 48h",
+            second.has("recommended_by")
+        )
+    }
+
     @Test
     fun setSource_storesItForTheNextEvent() {
         val stored = slot<RecommendedBy>()
