@@ -1,8 +1,7 @@
 package com.personalization.features.tracking.impl
 
-import com.personalization.sdk.domain.models.RecommendedBy
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
-import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.stories.StoriesManager
 import io.mockk.mockk
 import io.mockk.slot
@@ -25,14 +24,14 @@ import org.robolectric.annotation.Config
 class TrackingBackCompatTest {
 
     private lateinit var sendNetworkMethodUseCase: SendNetworkMethodUseCase
-    private lateinit var setRecommendedByUseCase: SetRecommendedByUseCase
+    private lateinit var setTrackingSourceUseCase: SetTrackingSourceUseCase
     private lateinit var storiesManager: StoriesManager
 
     @Before
     fun setUp() {
         sendNetworkMethodUseCase = mockk(relaxed = true)
-        setRecommendedByUseCase = mockk(relaxed = true)
-        storiesManager = StoriesManager(setRecommendedByUseCase, sendNetworkMethodUseCase)
+        setTrackingSourceUseCase = mockk(relaxed = true)
+        storiesManager = StoriesManager(setTrackingSourceUseCase, sendNetworkMethodUseCase)
     }
 
     @Test
@@ -53,7 +52,8 @@ class TrackingBackCompatTest {
 
     @Test
     fun legacyCall_stillAttributesTheNextEventToStories() {
-        val stored = slot<RecommendedBy>()
+        val storedType = slot<String>()
+        val storedCode = slot<String>()
 
         storiesManager.trackStory(
             event = "click",
@@ -62,9 +62,9 @@ class TrackingBackCompatTest {
             slideId = "3"
         )
 
-        verify { setRecommendedByUseCase.invoke(capture(stored)) }
-        assertEquals(RecommendedBy.TYPE.STORIES, stored.captured.type)
-        assertEquals("main_stories", stored.captured.code)
+        verify { setTrackingSourceUseCase.invoke(capture(storedType), capture(storedCode)) }
+        assertEquals("stories", storedType.captured)
+        assertEquals("main_stories", storedCode.captured)
     }
 
     @Test

@@ -734,9 +734,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // setSource only writes to memory: no request goes out, so on its own the button looks like
-        // it does nothing. It is the *next* event that carries the attribution, so the button sends
-        // one right after and reports that — which is the thing worth testing anyway.
+        // setSource stores the attribution and sends no request of its own, so on its own the button
+        // would look like it does nothing. It is the events that follow which carry it — for the next
+        // 48 hours — so the button sends one right after and reports that.
         findViewById<Button>(R.id.btnTrackingSetSource).setOnClickListener {
             val code = DemoTrackingNamespaceConstants.SOURCE_CODE
             sdk.tracking.setSource(
@@ -746,7 +746,7 @@ class MainActivity : AppCompatActivity() {
                 itemId = DemoTrackingNamespaceConstants.ITEM_ID,
                 listener = object : OnApiCallbackListener() {
                     override fun onSuccess(response: JSONObject?) {
-                        showTrackingResult("setSource OK — next event sent with recommended_code=$code")
+                        showTrackingResult("setSource OK — events now carry source=$code")
                     }
 
                     override fun onError(code: Int, msg: String?) {

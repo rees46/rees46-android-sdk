@@ -5,9 +5,8 @@ import android.os.Looper
 import android.util.Log
 import com.personalization.SDK
 import com.personalization.api.OnApiCallbackListener
-import com.personalization.sdk.domain.models.RecommendedBy
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
-import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.stories.models.Story
 import com.personalization.stories.views.StoriesView
 import java.lang.ref.WeakReference
@@ -24,7 +23,7 @@ import org.json.JSONObject
  * presentation surface for the view-less [SDK.showStories] entry point — never for loading data.
  */
 class StoriesManager @Inject constructor(
-    val setRecommendedByUseCase: SetRecommendedByUseCase,
+    val setTrackingSourceUseCase: SetTrackingSourceUseCase,
     val sendNetworkMethodUseCase: SendNetworkMethodUseCase
 ) {
 
@@ -143,7 +142,7 @@ class StoriesManager @Inject constructor(
             params.put(SLIDE_ID_PARAMS_NAME, slideId)
             params.put(CODE_PARAMS_NAME, effectiveCode)
 
-            setRecommendedByUseCase(RecommendedBy(RecommendedBy.TYPE.STORIES, effectiveCode))
+            setTrackingSourceUseCase(type = STORIES_SOURCE_TYPE, code = effectiveCode)
 
             sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, listener)
         } catch (e: JSONException) {
@@ -208,5 +207,8 @@ class StoriesManager @Inject constructor(
          * an HTTP status.
          */
         const val CLIENT_VALIDATION_ERROR_CODE: Int = -1
+
+        /** Wire value a story block is attributed by. Matches iOS `TrackingSourceType.stories`. */
+        const val STORIES_SOURCE_TYPE = "stories"
     }
 }

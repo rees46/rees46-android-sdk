@@ -10,8 +10,7 @@ import com.personalization.api.models.tracking.TrackingItem
 import com.personalization.api.models.tracking.TrackingSource
 import com.personalization.api.models.tracking.putSource
 import com.personalization.api.params.ProductItemParams
-import com.personalization.sdk.domain.models.RecommendedBy
-import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.stories.StoriesManager
 import org.json.JSONArray
 import javax.inject.Inject
@@ -26,7 +25,7 @@ import javax.inject.Inject
 internal class TrackingApiImpl @Inject constructor(
     private val trackEventManager: TrackEventManager,
     private val storiesManager: StoriesManager,
-    private val setRecommendedByUseCase: SetRecommendedByUseCase,
+    private val setTrackingSourceUseCase: SetTrackingSourceUseCase,
 ) : TrackingApi {
 
     override fun productView(
@@ -153,14 +152,14 @@ internal class TrackingApiImpl @Inject constructor(
         listener: OnApiCallbackListener?,
     ) {
         // An attribution already set on the request is the more specific one — it was built with the
-        // order — so [source] only fills the gap when the caller left it empty. It is handed over as
-        // the pending source, which `trackPurchase` merges into this one request and then clears:
-        // that path speaks raw wire values, so every TrackingSourceType works, including the ones the
-        // released `Params.RecommendedBy.TYPE` has no constant for.
-        if (source != null && request.recommendedBy == null) {
-            setSource(source)
+        // order — so [source] only fills the gap when the caller left it empty. This one is per-call:
+        // it colours this order and nothing else, which is why it does not go through setSource.
+        val attributed = if (source != null && request.recommendedBy == null) {
+            request.copy(recommendedBy = Params.RecommendedBy(source.type.value, source.code))
+        } else {
+            request
         }
-        trackEventManager.trackPurchase(request = request, listener = listener)
+        trackEventManager.trackPurchase(request = attributed, listener = listener)
     }
 
     override fun custom(
@@ -184,9 +183,7 @@ internal class TrackingApiImpl @Inject constructor(
     }
 
     override fun setSource(source: TrackingSource) {
-        setRecommendedByUseCase(
-            RecommendedBy(type = source.type.toDomainType(), code = source.code)
-        )
+        setTrackingSourceUseCase(type = source.type.value, code = source.code)
     }
 
     private fun Params.withSource(source: TrackingSource?): Params =

@@ -34,6 +34,8 @@ import com.personalization.sdk.domain.usecases.network.ExecuteQueueTasksUseCase
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
 import com.personalization.sdk.domain.usecases.recommendation.GetRecommendedByUseCase
 import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.GetTrackingSourceUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.sdk.domain.usecases.userSettings.GetUserSettingsValueUseCase
 import com.personalization.sdk.domain.usecases.userSettings.UpdateUserSettingsValueUseCase
 import com.personalization.stories.StoriesManager
@@ -93,13 +95,15 @@ class SdkModule {
         setRecommendedByUseCase: SetRecommendedByUseCase,
         sendNetworkMethodUseCase: SendNetworkMethodUseCase,
         inAppNotificationManager: InAppNotificationManager,
-        getUserSettingsValueUseCase: GetUserSettingsValueUseCase
+        getUserSettingsValueUseCase: GetUserSettingsValueUseCase,
+        getTrackingSourceUseCase: GetTrackingSourceUseCase
     ): TrackEventManager = TrackEventManagerImpl(
         getRecommendedByUseCase = getRecommendedByUseCase,
         setRecommendedByUseCase = setRecommendedByUseCase,
         sendNetworkMethodUseCase = sendNetworkMethodUseCase,
         inAppNotificationManager = inAppNotificationManager,
-        getUserSettingsValueUseCase = getUserSettingsValueUseCase
+        getUserSettingsValueUseCase = getUserSettingsValueUseCase,
+        getTrackingSourceUseCase = getTrackingSourceUseCase
     )
 
     @Singleton
@@ -107,20 +111,20 @@ class SdkModule {
     fun provideTrackingApi(
         trackEventManager: TrackEventManager,
         storiesManager: StoriesManager,
-        setRecommendedByUseCase: SetRecommendedByUseCase
+        setTrackingSourceUseCase: SetTrackingSourceUseCase
     ): TrackingApi = TrackingApiImpl(
         trackEventManager = trackEventManager,
         storiesManager = storiesManager,
-        setRecommendedByUseCase = setRecommendedByUseCase
+        setTrackingSourceUseCase = setTrackingSourceUseCase
     )
 
     @Singleton
     @Provides
     fun provideStoriesManager(
-        setRecommendedByUseCase: SetRecommendedByUseCase,
+        setTrackingSourceUseCase: SetTrackingSourceUseCase,
         sendNetworkMethodUseCase: SendNetworkMethodUseCase
     ): StoriesManager = StoriesManager(
-        setRecommendedByUseCase = setRecommendedByUseCase,
+        setTrackingSourceUseCase = setTrackingSourceUseCase,
         sendNetworkMethodUseCase = sendNetworkMethodUseCase
     )
 

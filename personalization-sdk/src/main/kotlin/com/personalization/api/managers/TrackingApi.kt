@@ -129,12 +129,14 @@ interface TrackingApi {
     )
 
     /**
-     * Stores the attribution source and attaches it to the next event.
+     * Stores the attribution source and attaches it to every event for the next 48 hours.
      *
      * Use it when the source outlives a single call — a user entering the catalog from a recommender
-     * block. For a single event prefer the `source` parameter, which behaves identically on every
-     * platform; the stored source is per instance, but its lifetime is platform-specific (iOS keeps
-     * it for 48 hours and colours every event in that window, Android applies it once).
+     * block. It is stored per SDK instance and survives a cold start, and it travels in its own
+     * `source` field rather than the `recommended_by` a per-call [source] uses. For a single event
+     * prefer that per-call parameter.
+     *
+     * Same behaviour and same wire shape as iOS.
      */
     fun setSource(source: TrackingSource)
 }

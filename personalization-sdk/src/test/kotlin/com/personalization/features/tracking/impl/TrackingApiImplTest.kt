@@ -16,6 +16,9 @@ import com.personalization.sdk.domain.models.RecommendedBy
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
 import com.personalization.sdk.domain.usecases.recommendation.GetRecommendedByUseCase
 import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.models.StoredTrackingSource
+import com.personalization.sdk.domain.usecases.trackingSource.GetTrackingSourceUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.sdk.domain.usecases.userSettings.GetUserSettingsValueUseCase
 import com.personalization.stories.StoriesManager
 import io.mockk.every
@@ -45,6 +48,8 @@ class TrackingApiImplTest {
     private lateinit var sendNetworkMethodUseCase: SendNetworkMethodUseCase
     private lateinit var setRecommendedByUseCase: SetRecommendedByUseCase
     private lateinit var getRecommendedByUseCase: GetRecommendedByUseCase
+    private lateinit var setTrackingSourceUseCase: SetTrackingSourceUseCase
+    private lateinit var getTrackingSourceUseCase: GetTrackingSourceUseCase
     private lateinit var storiesManager: StoriesManager
     private lateinit var trackEventManager: TrackEventManagerImpl
     private lateinit var tracking: TrackingApi
@@ -56,15 +61,26 @@ class TrackingApiImplTest {
         getRecommendedByUseCase = mockk(relaxed = true)
         every { getRecommendedByUseCase.invoke() } returns null
 
+        // Stand in for the persisted store: setSource writes, every send reads. Modelling it as a
+        // plain variable is what lets a test watch a source survive across several requests.
+        setTrackingSourceUseCase = mockk(relaxed = true)
+        getTrackingSourceUseCase = mockk(relaxed = true)
+        var stored: StoredTrackingSource? = null
+        every { setTrackingSourceUseCase.invoke(any(), any()) } answers {
+            stored = StoredTrackingSource(type = firstArg(), code = secondArg())
+        }
+        every { getTrackingSourceUseCase.invoke() } answers { stored }
+
         trackEventManager = TrackEventManagerImpl(
             getRecommendedByUseCase,
             setRecommendedByUseCase,
             sendNetworkMethodUseCase,
             mockk<InAppNotificationManager>(relaxed = true),
-            mockk<GetUserSettingsValueUseCase>(relaxed = true)
+            mockk<GetUserSettingsValueUseCase>(relaxed = true),
+            getTrackingSourceUseCase
         )
-        storiesManager = StoriesManager(setRecommendedByUseCase, sendNetworkMethodUseCase)
-        tracking = TrackingApiImpl(trackEventManager, storiesManager, setRecommendedByUseCase)
+        storiesManager = StoriesManager(setTrackingSourceUseCase, sendNetworkMethodUseCase)
+        tracking = TrackingApiImpl(trackEventManager, storiesManager, setTrackingSourceUseCase)
     }
 
     // region events
@@ -276,10 +292,11 @@ class TrackingApiImplTest {
             setRecommendedByUseCase,
             sendNetworkMethodUseCase,
             mockk<InAppNotificationManager>(relaxed = true),
-            mockk<GetUserSettingsValueUseCase>(relaxed = true)
+            mockk<GetUserSettingsValueUseCase>(relaxed = true),
+            getTrackingSourceUseCase
         )
 
-        TrackingApiImpl(manager, storiesManager, setRecommendedByUseCase).productView("sku-1")
+        TrackingApiImpl(manager, storiesManager, setTrackingSourceUseCase).productView("sku-1")
 
         val body = capturedBody(path = "push")
         assertEquals("dynamic", body.getString("recommended_by"))
@@ -289,28 +306,20 @@ class TrackingApiImplTest {
     /** The tester's flow: tap "set source", then tap an event, and look at what went out. */
     @Test
     fun setSource_thenAnEvent_putsTheSourceOnTheWire() {
-        var pending: RecommendedBy? = null
-        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
-        every { getRecommendedByUseCase.invoke() } answers { pending }
-
         tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
         tracking.productView("sku-1")
 
-        val body = capturedBody(path = "push")
-        assertEquals("dynamic", body.getString("recommended_by"))
-        assertEquals("demo-block", body.getString("recommended_code"))
+        val source = capturedBody(path = "push").getJSONObject("source")
+        assertEquals("dynamic", source.getString("from"))
+        assertEquals("demo-block", source.getString("code"))
     }
 
     /**
-     * What the stored source does to the requests that follow it. A tester read `setSource` as
-     * broken, and the answer turns out to depend on which request you look at.
+     * The stored source colours every request until it expires — it is not spent by the first one.
+     * This is the iOS behaviour, and the reason a tester read the old Android build as broken.
      */
     @Test
-    fun setSource_reachesTheFirstRequestOnlyAndNotTheOnesAfter() {
-        var pending: RecommendedBy? = null
-        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
-        every { getRecommendedByUseCase.invoke() } answers { pending }
-
+    fun setSource_staysOnEveryFollowingRequest() {
         tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "demo-block"))
         tracking.productView("sku-1")
         tracking.categoryView("cat-1")
@@ -318,43 +327,64 @@ class TrackingApiImplTest {
 
         val bodies = capturedBodies(path = "push")
         assertEquals(3, bodies.size)
+        bodies.forEachIndexed { index, body ->
+            val source = body.getJSONObject("source")
+            assertEquals("request $index lost the source", "dynamic", source.getString("from"))
+            assertEquals("request $index lost the code", "demo-block", source.getString("code"))
+        }
+    }
 
-        assertEquals("dynamic", bodies[0].getString("recommended_by"))
-        assertEquals("demo-block", bodies[0].getString("recommended_code"))
+    /** A custom event carries it too — `push/custom`, the third send path iOS attaches it to. */
+    @Test
+    fun setSource_reachesCustomEventsAsWell() {
+        tracking.setSource(TrackingSource(TrackingSourceType.BULK, "newsletter"))
+        tracking.custom(event = "shared")
 
-        // iOS keeps the same source on every request for 48h. Android drops it here.
-        assertFalse("2nd request kept the source", bodies[1].has("recommended_by"))
-        assertFalse("3rd request kept the source", bodies[2].has("recommended_by"))
+        val source = capturedBody(path = "push/custom").getJSONObject("source")
+        assertEquals("bulk", source.getString("from"))
+        assertEquals("newsletter", source.getString("code"))
     }
 
     /**
-     * Android sends a stored source in the same fields as a per-call one. iOS does not — there a
-     * stored source travels in a `source` object instead. Pinned so the difference is visible.
+     * A stored source and a per-call one are different things and travel in different fields: the
+     * stored one in a `source` object, the per-call one in `recommended_by`. Same split as iOS.
      */
     @Test
-    fun storedSourceUsesTheSameWireFieldsAsAPerCallSource() {
-        var pending: RecommendedBy? = null
-        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
-        every { getRecommendedByUseCase.invoke() } answers { pending }
-
+    fun storedAndPerCallSourcesUseDifferentWireFields() {
         tracking.setSource(TrackingSource(TrackingSourceType.DYNAMIC, "stored-block"))
-        tracking.productView("sku-1")
-        val stored = capturedBody(path = "push")
+        tracking.productView(
+            itemId = "sku-1",
+            source = TrackingSource(TrackingSourceType.CHAIN, "call-block")
+        )
 
-        assertEquals("dynamic", stored.getString("recommended_by"))
-        assertEquals("stored-block", stored.getString("recommended_code"))
-        assertFalse("Android has no `source` object", stored.has("source"))
+        val body = capturedBody(path = "push")
+        assertEquals("dynamic", body.getJSONObject("source").getString("from"))
+        assertEquals("stored-block", body.getJSONObject("source").getString("code"))
+        assertEquals("chain", body.getString("recommended_by"))
+        assertEquals("call-block", body.getString("recommended_code"))
+    }
+
+    /** A viewed slide attributes what follows to its block — same as iOS. */
+    @Test
+    fun aStoryView_makesItsBlockTheSourceOfTheNextEvent() {
+        tracking.storyView(storyId = "42", slideId = "3", code = "main_stories")
+        tracking.productView("sku-1")
+
+        val source = capturedBody(path = "push").getJSONObject("source")
+        assertEquals("stories", source.getString("from"))
+        assertEquals("main_stories", source.getString("code"))
     }
 
     @Test
-    fun setSource_storesItForTheNextEvent() {
-        val stored = slot<RecommendedBy>()
-        every { setRecommendedByUseCase.invoke(capture(stored)) } returns Unit
+    fun setSource_storesTheRawWireValue() {
+        val type = slot<String>()
+        val code = slot<String>()
+        every { setTrackingSourceUseCase.invoke(capture(type), capture(code)) } returns Unit
 
         tracking.setSource(TrackingSource(TrackingSourceType.FULL_SEARCH, "boots"))
 
-        assertEquals(RecommendedBy.TYPE.FULL_SEARCH, stored.captured.type)
-        assertEquals("boots", stored.captured.code)
+        assertEquals("full_search", type.captured)
+        assertEquals("boots", code.captured)
     }
 
     // endregion
@@ -512,17 +542,13 @@ class TrackingApiImplTest {
             orderPrice = 100.0,
             items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0))
         )
-        // Model the real store-then-consume cycle so the assertion can read the wire.
-        var pending: RecommendedBy? = null
-        every { setRecommendedByUseCase.invoke(any()) } answers { pending = firstArg() }
-        every { getRecommendedByUseCase.invoke() } answers { pending }
-
         tracking.purchase(request, source = TrackingSource(TrackingSourceType.FULL_SEARCH, "boots"))
 
         val body = capturedBody(path = "push")
         assertEquals("full_search", body.getString("recommended_by"))
         assertEquals("boots", body.getString("recommended_code"))
-        assertNull("the source is consumed by this one order", pending)
+        // Per-call, so it colours this order and leaves no stored source behind.
+        assertFalse("a per-call source must not become sticky", body.has("source"))
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.personalization.features.trackEvent.impl
 
+import android.util.Log
+import com.personalization.SDK
 import com.personalization.Params
 import com.personalization.Params.TrackEvent
 import com.personalization.api.OnApiCallbackListener
@@ -12,6 +14,7 @@ import com.personalization.sdk.data.models.params.SdkInitializationParams.PARAM_
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
 import com.personalization.sdk.domain.usecases.recommendation.GetRecommendedByUseCase
 import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.GetTrackingSourceUseCase
 import com.personalization.sdk.domain.usecases.userSettings.GetUserSettingsValueUseCase
 import com.personalization.sdk.data.models.params.UserBasicParams
 import org.json.JSONException
@@ -23,7 +26,8 @@ internal class TrackEventManagerImpl @Inject constructor(
     val setRecommendedByUseCase: SetRecommendedByUseCase,
     private val sendNetworkMethodUseCase: SendNetworkMethodUseCase,
     private val inAppNotificationManager: InAppNotificationManager,
-    private val getUserSettingsValueUseCase: GetUserSettingsValueUseCase
+    private val getUserSettingsValueUseCase: GetUserSettingsValueUseCase,
+    private val getTrackingSourceUseCase: GetTrackingSourceUseCase
 ) : TrackEventManager {
 
     override fun track(event: TrackEvent, productId: String) {
@@ -55,9 +59,12 @@ internal class TrackEventManagerImpl @Inject constructor(
             }
         }
 
+        val body = params.build()
+        attachStoredSource(body)
+
         sendNetworkMethodUseCase.postAsync(
             PUSH_REQUEST,
-            params.build(),
+            body,
             internalListener
         )
     }
@@ -92,6 +99,8 @@ internal class TrackEventManagerImpl @Inject constructor(
                 listener?.onError(code, msg)
             }
         }
+
+        attachStoredSource(body)
 
         sendNetworkMethodUseCase.postAsync(
             PUSH_REQUEST,
@@ -204,7 +213,29 @@ internal class TrackEventManagerImpl @Inject constructor(
         )
     }
 
+    /**
+     * Adds the source a host set with `tracking.setSource(...)`, if it is still inside its window.
+     *
+     * Port of iOS `TrackEventServiceImpl`: the source rides in its own `source` object and stays on
+     * every request until it expires — it is not spent by the first one. Attached to `push` and
+     * `push/custom`; `popup/showed` carries no attribution, on either platform.
+     */
+    private fun attachStoredSource(body: JSONObject) {
+        val source = getTrackingSourceUseCase() ?: return
+        try {
+            body.put(
+                SOURCE_PARAMETER,
+                JSONObject()
+                    .put(SOURCE_FROM_PARAMETER, source.type)
+                    .put(SOURCE_CODE_PARAMETER, source.code)
+            )
+        } catch (e: JSONException) {
+            Log.e(SDK.TAG, e.message, e)
+        }
+    }
+
     private fun postCustomEvent(json: JSONObject, listener: OnApiCallbackListener?) {
+        attachStoredSource(json)
         val internalListener = object : OnApiCallbackListener() {
             override fun onSuccess(response: JSONObject?) {
                 response?.let {
@@ -247,5 +278,9 @@ internal class TrackEventManagerImpl @Inject constructor(
         private const val CATEGORY_PARAMETER = "category"
         private const val LABEL_PARAMETER = "label"
         private const val VALUE_PARAMETER = "value"
+
+        private const val SOURCE_PARAMETER = "source"
+        private const val SOURCE_FROM_PARAMETER = "from"
+        private const val SOURCE_CODE_PARAMETER = "code"
     }
 }

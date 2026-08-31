@@ -6,6 +6,8 @@ import com.personalization.sdk.data.repositories.preferences.PreferencesDataSour
 import com.personalization.sdk.data.repositories.preferences.PreferencesDataSourceImpl
 import com.personalization.sdk.data.repositories.recommendation.RecommendationDataSource
 import com.personalization.sdk.data.repositories.recommendation.RecommendationDataSourceImpl
+import com.personalization.sdk.data.repositories.trackingSource.TrackingSourceDataSource
+import com.personalization.sdk.data.repositories.trackingSource.TrackingSourceDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -21,6 +23,10 @@ interface DataSourcesModule {
     @Binds
     @Singleton
     fun bindRecommendationDataSource(impl: RecommendationDataSourceImpl): RecommendationDataSource
+
+    @Binds
+    @Singleton
+    fun bindTrackingSourceDataSource(impl: TrackingSourceDataSourceImpl): TrackingSourceDataSource
 
     companion object {
 

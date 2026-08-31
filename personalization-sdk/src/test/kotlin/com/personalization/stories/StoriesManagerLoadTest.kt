@@ -2,7 +2,7 @@ package com.personalization.stories
 
 import com.personalization.api.OnApiCallbackListener
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
-import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.stories.models.Story
 import io.mockk.Runs
 import io.mockk.every
@@ -28,14 +28,14 @@ import org.robolectric.annotation.Config
 class StoriesManagerLoadTest {
 
     private lateinit var sendNetworkMethodUseCase: SendNetworkMethodUseCase
-    private lateinit var setRecommendedByUseCase: SetRecommendedByUseCase
+    private lateinit var setTrackingSourceUseCase: SetTrackingSourceUseCase
     private lateinit var storiesManager: StoriesManager
 
     @Before
     fun setUp() {
         sendNetworkMethodUseCase = mockk(relaxed = true)
-        setRecommendedByUseCase = mockk(relaxed = true)
-        storiesManager = StoriesManager(setRecommendedByUseCase, sendNetworkMethodUseCase)
+        setTrackingSourceUseCase = mockk(relaxed = true)
+        storiesManager = StoriesManager(setTrackingSourceUseCase, sendNetworkMethodUseCase)
     }
 
     @Test

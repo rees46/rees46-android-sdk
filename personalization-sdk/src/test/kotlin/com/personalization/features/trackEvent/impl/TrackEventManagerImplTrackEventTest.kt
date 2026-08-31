@@ -9,6 +9,7 @@ import com.personalization.sdk.domain.usecases.userSettings.GetUserSettingsValue
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import com.personalization.sdk.domain.usecases.trackingSource.GetTrackingSourceUseCase
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -48,7 +49,10 @@ class TrackEventManagerImplTrackEventTest {
             setRecommendedByUseCase,
             sendNetworkMethodUseCase,
             inAppNotificationManager,
-            getUserSettingsValueUseCase
+            getUserSettingsValueUseCase,
+            mockk<GetTrackingSourceUseCase>(relaxed = true).also {
+                every { it.invoke() } returns null
+            }
         )
     }
 

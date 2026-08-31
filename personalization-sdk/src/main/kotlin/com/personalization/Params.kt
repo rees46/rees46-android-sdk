@@ -65,6 +65,15 @@ class Params : AbstractParams<Params>() {
             this.type = type.value
             this.code = code
         }
+
+        /**
+         * Attribution from a raw wire value, for the sources [TYPE] has no constant for. Adding one
+         * there would break hosts with an exhaustive `when`; see `TrackingSourceType`.
+         */
+        internal constructor(rawType: String, code: String?) {
+            this.type = rawType
+            this.code = code
+        }
     }
 
     /**
