@@ -22,6 +22,7 @@ import com.personalization.api.managers.PredictManager
 import com.personalization.api.managers.RecommendationManager
 import com.personalization.api.managers.SearchManager
 import com.personalization.api.managers.TrackEventManager
+import com.personalization.api.managers.TrackingApi
 import com.personalization.api.params.ProfileParams
 import com.personalization.di.AppModule
 import com.personalization.di.DaggerSdkComponent
@@ -94,6 +95,18 @@ open class SDK {
     @Inject
     lateinit var cartManager: CartManager
 
+    /**
+     * Standard tracking events, grouped: `sdk.tracking.productView(itemId)`,
+     * `sdk.tracking.addToCart(item)`, and the rest.
+     */
+    @Inject
+    lateinit var tracking: TrackingApi
+
+    @Deprecated(
+        message = "Use the tracking namespace: sdk.tracking.",
+        replaceWith = ReplaceWith("tracking"),
+        level = DeprecationLevel.WARNING
+    )
     @Inject
     lateinit var trackEventManager: TrackEventManager
 
@@ -348,6 +361,16 @@ open class SDK {
      * @param storyId Story ID
      * @param slideId Slide ID
      */
+    /**
+     * No `replaceWith`: which method replaces this one depends on [event], and a quick-fix that always
+     * picked `storyView` would silently turn a tracked click into a view.
+     */
+    @Deprecated(
+        message = "Use the tracking namespace: sdk.tracking.storyView(storyId, slideId, code) for " +
+            "\"view\" and sdk.tracking.storyClick(storyId, slideId, code) for \"click\".",
+        level = DeprecationLevel.WARNING
+    )
+    @Suppress("DEPRECATION")
     fun trackStory(event: String, code: String, storyId: Int, slideId: String) {
         if (::storiesManager.isInitialized) {
             storiesManager.trackStory(
@@ -661,6 +684,7 @@ open class SDK {
             "trackEventManager.track(event, itemId)"
         )
     )
+    @Suppress("DEPRECATION")
     fun track(event: TrackEvent, itemId: String) {
         trackEventManager.track(event, itemId)
     }
@@ -679,6 +703,7 @@ open class SDK {
             "trackEventManager.track(event, params, listener)"
         )
     )
+    @Suppress("DEPRECATION")
     fun track(event: TrackEvent, params: Params, listener: OnApiCallbackListener? = null) {
         trackEventManager.track(event, params, listener)
     }
@@ -694,6 +719,14 @@ open class SDK {
      * @param customFields Optional map merged at top level and under `payload`
      * @param listener Callback
      */
+    @Deprecated(
+        message = "Use the tracking namespace: sdk.tracking.custom(...).",
+        replaceWith = ReplaceWith(
+            "tracking.custom(event = event, time = time, category = category, label = label, value = value, customFields = customFields, listener = listener)"
+        ),
+        level = DeprecationLevel.WARNING
+    )
+    @Suppress("DEPRECATION")
     fun trackEvent(
         event: String,
         time: Int? = null,
@@ -719,6 +752,12 @@ open class SDK {
      *
      * Prefer this over [track] with [TrackEvent.PURCHASE] and manual [Params] assembly.
      */
+    @Deprecated(
+        message = "Use the tracking namespace: sdk.tracking.purchase(request, listener = listener).",
+        replaceWith = ReplaceWith("tracking.purchase(request = request, listener = listener)"),
+        level = DeprecationLevel.WARNING
+    )
+    @Suppress("DEPRECATION")
     fun trackPurchase(
         request: PurchaseTrackingRequest,
         listener: OnApiCallbackListener? = null,

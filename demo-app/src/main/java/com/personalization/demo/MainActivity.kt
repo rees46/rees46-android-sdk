@@ -31,6 +31,10 @@ import com.personalization.OnClickListener
 import com.personalization.Product
 import com.personalization.stories.views.StoriesView
 import com.personalization.api.OnApiCallbackListener
+import com.personalization.api.models.tracking.TrackingSourceType
+import com.personalization.api.models.tracking.TrackingSource
+import com.personalization.api.models.tracking.TrackingItem
+import com.personalization.api.managers.TrackingApi
 import com.personalization.api.models.purchase.PurchaseItemRequest
 import com.personalization.api.models.purchase.PurchaseTrackingRequest
 import com.personalization.api.params.ProductItemParams
@@ -51,6 +55,16 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         const val MAX_LOGGED_STORIES_EVENTS = 20
+    }
+
+    private object DemoTrackingNamespaceConstants {
+        const val ITEM_ID = "android-demo-sku-001"
+        const val SECOND_ITEM_ID = "android-demo-sku-002"
+        const val CATEGORY_ID = "android-demo-category"
+        const val SEARCH_QUERY = "demo boots"
+        const val QUANTITY = 2
+        const val PRICE = 49.9
+        const val SOURCE_CODE = "android-demo-block"
     }
 
     private object DemoTrackEventConstants {
@@ -142,6 +156,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnTrackEventCustomFields).setOnClickListener {
             trackEventWithCustomFieldsSuccess()
         }
+
+        setupTrackingNamespaceButtons()
 
         findViewById<Button>(R.id.btnTrackEventCollision).setOnClickListener {
             trackEventWithReservedKeyCollision()
@@ -607,6 +623,160 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+    }
+
+    /**
+     * One button per standard event, all of them going through the `tracking` namespace.
+     * Each writes its outcome into `tvTrackingNamespaceResult`, which is what
+     * `TrackingNamespaceDemoE2ETest` reads.
+     */
+    private fun setupTrackingNamespaceButtons() {
+        findViewById<Button>(R.id.btnTrackingProductView).setOnClickListener {
+            runTrackingDemo("productView") { tracking, listener ->
+                tracking.productView(
+                    itemId = DemoTrackingNamespaceConstants.ITEM_ID,
+                    source = TrackingSource(
+                        type = TrackingSourceType.DYNAMIC,
+                        code = DemoTrackingNamespaceConstants.SOURCE_CODE
+                    ),
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingCategoryView).setOnClickListener {
+            runTrackingDemo("categoryView") { tracking, listener ->
+                tracking.categoryView(
+                    categoryId = DemoTrackingNamespaceConstants.CATEGORY_ID,
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingSearch).setOnClickListener {
+            runTrackingDemo("search") { tracking, listener ->
+                tracking.search(
+                    query = DemoTrackingNamespaceConstants.SEARCH_QUERY,
+                    results = listOf(
+                        DemoTrackingNamespaceConstants.ITEM_ID,
+                        DemoTrackingNamespaceConstants.SECOND_ITEM_ID
+                    ),
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingAddToCart).setOnClickListener {
+            runTrackingDemo("addToCart") { tracking, listener ->
+                tracking.addToCart(
+                    item = TrackingItem(
+                        id = DemoTrackingNamespaceConstants.ITEM_ID,
+                        quantity = DemoTrackingNamespaceConstants.QUANTITY,
+                        price = DemoTrackingNamespaceConstants.PRICE
+                    ),
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingSyncCart).setOnClickListener {
+            runTrackingDemo("syncCart") { tracking, listener ->
+                tracking.syncCart(
+                    items = listOf(
+                        TrackingItem(
+                            id = DemoTrackingNamespaceConstants.ITEM_ID,
+                            quantity = DemoTrackingNamespaceConstants.QUANTITY,
+                            price = DemoTrackingNamespaceConstants.PRICE
+                        ),
+                        TrackingItem(id = DemoTrackingNamespaceConstants.SECOND_ITEM_ID)
+                    ),
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingRemoveFromCart).setOnClickListener {
+            runTrackingDemo("removeFromCart") { tracking, listener ->
+                tracking.removeFromCart(
+                    itemId = DemoTrackingNamespaceConstants.ITEM_ID,
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingAddToFavorites).setOnClickListener {
+            runTrackingDemo("addToFavorites") { tracking, listener ->
+                tracking.addToFavorites(
+                    itemId = DemoTrackingNamespaceConstants.ITEM_ID,
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingSyncFavorites).setOnClickListener {
+            runTrackingDemo("syncFavorites") { tracking, listener ->
+                tracking.syncFavorites(
+                    itemIds = listOf(
+                        DemoTrackingNamespaceConstants.ITEM_ID,
+                        DemoTrackingNamespaceConstants.SECOND_ITEM_ID
+                    ),
+                    listener = listener
+                )
+            }
+        }
+
+        findViewById<Button>(R.id.btnTrackingRemoveFromFavorites).setOnClickListener {
+            runTrackingDemo("removeFromFavorites") { tracking, listener ->
+                tracking.removeFromFavorites(
+                    itemId = DemoTrackingNamespaceConstants.ITEM_ID,
+                    listener = listener
+                )
+            }
+        }
+
+        // setSource stores the attribution and sends no request of its own, so on its own the button
+        // would look like it does nothing. It is the events that follow which carry it — for the next
+        // 48 hours — so the button sends one right after and reports that.
+        findViewById<Button>(R.id.btnTrackingSetSource).setOnClickListener {
+            val code = DemoTrackingNamespaceConstants.SOURCE_CODE
+            sdk.tracking.setSource(
+                TrackingSource(type = TrackingSourceType.DYNAMIC, code = code)
+            )
+            sdk.tracking.productView(
+                itemId = DemoTrackingNamespaceConstants.ITEM_ID,
+                listener = object : OnApiCallbackListener() {
+                    override fun onSuccess(response: JSONObject?) {
+                        showTrackingResult("setSource OK — events now carry source=$code")
+                    }
+
+                    override fun onError(code: Int, msg: String?) {
+                        showTrackingResult("setSource failed: $code ${msg ?: ""}")
+                    }
+                }
+            )
+        }
+    }
+
+    private fun runTrackingDemo(
+        method: String,
+        call: (TrackingApi, OnApiCallbackListener) -> Unit
+    ) {
+        call(
+            sdk.tracking,
+            object : OnApiCallbackListener() {
+                override fun onSuccess(response: JSONObject?) {
+                    showTrackingResult("$method OK")
+                }
+
+                override fun onError(code: Int, msg: String?) {
+                    showTrackingResult("$method failed: $code ${msg ?: ""}")
+                }
+            }
+        )
+    }
+
+    private fun showTrackingResult(text: String) = runOnUiThread {
+        findViewById<TextView>(R.id.tvTrackingNamespaceResult).text = text
     }
 
     private fun trackProductViewIdOnly() {

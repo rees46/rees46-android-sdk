@@ -5,9 +5,8 @@ import android.os.Looper
 import android.util.Log
 import com.personalization.SDK
 import com.personalization.api.OnApiCallbackListener
-import com.personalization.sdk.domain.models.RecommendedBy
 import com.personalization.sdk.domain.usecases.network.SendNetworkMethodUseCase
-import com.personalization.sdk.domain.usecases.recommendation.SetRecommendedByUseCase
+import com.personalization.sdk.domain.usecases.trackingSource.SetTrackingSourceUseCase
 import com.personalization.stories.models.Story
 import com.personalization.stories.views.StoriesView
 import java.lang.ref.WeakReference
@@ -24,11 +23,15 @@ import org.json.JSONObject
  * presentation surface for the view-less [SDK.showStories] entry point — never for loading data.
  */
 class StoriesManager @Inject constructor(
-    val setRecommendedByUseCase: SetRecommendedByUseCase,
+    val setTrackingSourceUseCase: SetTrackingSourceUseCase,
     val sendNetworkMethodUseCase: SendNetworkMethodUseCase
 ) {
 
     private var lastAttachedView: WeakReference<StoriesView>? = null
+
+    /** The block the SDK last requested — the fallback for tracking calls that omit the code. */
+    @Volatile
+    private var lastRequestedCode: String? = null
 
     /** Records the surface [SDK.showStories] presents from. Not used for loading. */
     internal fun rememberAttachedView(storiesView: StoriesView) {
@@ -82,6 +85,7 @@ class StoriesManager @Inject constructor(
     }
 
     internal fun requestStories(code: String, listener: OnApiCallbackListener) {
+        lastRequestedCode = code
         sendNetworkMethodUseCase.getAsync(
             method = String.format(REQUEST_STORIES_METHOD, code),
             params = JSONObject(),
@@ -99,20 +103,61 @@ class StoriesManager @Inject constructor(
      * @param slideId Slide ID
      */
     internal fun trackStory(event: String, code: String, storyId: Int, slideId: String) {
+        trackStory(
+            event = event,
+            code = code,
+            storyId = storyId.toString(),
+            slideId = slideId,
+            listener = null
+        )
+    }
+
+    /**
+     * Story event with the story id as a string — the shape the `tracking` namespace speaks.
+     * A numeric id still goes on the wire as a number, so the request is unchanged.
+     *
+     * [code] falls back to the block the SDK last requested; without either the event cannot be sent,
+     * since the backend attributes it to a block. Every path that gives up reports through [listener]
+     * rather than returning silently — a caller awaiting the callback (the Flutter bridge does) would
+     * otherwise wait forever.
+     */
+    internal fun trackStory(
+        event: String,
+        code: String?,
+        storyId: String,
+        slideId: String,
+        listener: OnApiCallbackListener? = null
+    ) {
+        val effectiveCode = code ?: lastRequestedCode
+        if (effectiveCode == null) {
+            val message = "trackStory($event): no stories code given and no block loaded yet"
+            Log.w(SDK.TAG, message)
+            listener?.onError(CLIENT_VALIDATION_ERROR_CODE, message)
+            return
+        }
         try {
             val params = JSONObject()
             params.put(EVENT_PARAMS_NAME, event)
-            params.put(STORY_ID_PARAMS_NAME, storyId)
+            params.put(STORY_ID_PARAMS_NAME, storyId.asWireStoryId())
             params.put(SLIDE_ID_PARAMS_NAME, slideId)
-            params.put(CODE_PARAMS_NAME, code)
+            params.put(CODE_PARAMS_NAME, effectiveCode)
 
-            setRecommendedByUseCase(RecommendedBy(RecommendedBy.TYPE.STORIES, code))
+            setTrackingSourceUseCase(type = STORIES_SOURCE_TYPE, code = effectiveCode)
 
-            sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, null)
+            sendNetworkMethodUseCase.postAsync(TRACK_STORIES_METHOD, params, listener)
         } catch (e: JSONException) {
-            e.printStackTrace()
+            Log.e(SDK.TAG, e.message, e)
+            listener?.onError(CLIENT_VALIDATION_ERROR_CODE, e.message)
         }
     }
+
+    /**
+     * A numeric id keeps going on the wire as a number, the way `trackStory(storyId: Int)` always sent
+     * it. Converted only when the number renders back to the same text, so ids like `"0123"` — which
+     * `toInt()` would turn into `123` — stay strings instead of being silently rewritten.
+     */
+    private fun String.asWireStoryId(): Any =
+        toIntOrNull()?.takeIf { it.toString() == this } ?: this
 
     private fun getStories(json: JSONObject): List<Story> {
         val stories = ArrayList<Story>()
@@ -155,5 +200,15 @@ class StoriesManager @Inject constructor(
         const val STORY_ID_PARAMS_NAME = "story_id"
         const val SLIDE_ID_PARAMS_NAME = "slide_id"
         const val CODE_PARAMS_NAME = "code"
+
+        /**
+         * Reported when the SDK rejects a story event before it reaches the network — same negative
+         * code the other client-side validations use, so a caller can tell "we never sent this" from
+         * an HTTP status.
+         */
+        const val CLIENT_VALIDATION_ERROR_CODE: Int = -1
+
+        /** Wire value a story block is attributed by. Matches iOS `TrackingSourceType.stories`. */
+        const val STORIES_SOURCE_TYPE = "stories"
     }
 }

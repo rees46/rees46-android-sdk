@@ -65,6 +65,15 @@ class Params : AbstractParams<Params>() {
             this.type = type.value
             this.code = code
         }
+
+        /**
+         * Attribution from a raw wire value, for the sources [TYPE] has no constant for. Adding one
+         * there would break hosts with an exhaustive `when`; see `TrackingSourceType`.
+         */
+        internal constructor(rawType: String, code: String?) {
+            this.type = rawType
+            this.code = code
+        }
     }
 
     /**
@@ -153,14 +162,31 @@ class Params : AbstractParams<Params>() {
     }
 
     internal fun put(recommendedBy: com.personalization.sdk.domain.models.RecommendedBy): Params {
-        return putRecommendedBy(recommendedBy.type.toString(), recommendedBy.code)
+        // `toString()` on the enum yields its name (RECOMMENDATION); the API expects the wire
+        // value (dynamic) and answers 422 for anything else.
+        return putRecommendedBy(recommendedBy.type.value, recommendedBy.code)
     }
+
+    /**
+     * Attribution from a raw `recommended_by` value. Needed for the sources [RecommendedBy.TYPE] has
+     * no constant for — adding one to that released public enum would break hosts with an exhaustive
+     * `when` over it. See `TrackingSourceType`.
+     */
+    internal fun putRawRecommendedBy(type: String, code: String?): Params =
+        putRecommendedBy(type, code)
 
     private fun putRecommendedBy(type: String, code: String?): Params {
         try {
             params.put(InternalParameter.RECOMMENDED_BY.value, type)
             if (code != null) {
-                params.put(InternalParameter.RECOMMENDED_CODE.value, code)
+                // `web_push_digest` names its own code field; every other source uses the common one.
+                // Mirrors iOS `RecommendedByCase.getCodeField()`.
+                val field = if (type == WEB_PUSH_DIGEST_TYPE) {
+                    InternalParameter.WEB_PUSH_DIGEST_CODE
+                } else {
+                    InternalParameter.RECOMMENDED_CODE
+                }
+                params.put(field.value, code)
             }
         } catch (e: JSONException) {
             Log.e(SDK.TAG, e.message, e)
@@ -240,11 +266,20 @@ class Params : AbstractParams<Params>() {
         VALUE("value"),
         RECOMMENDED_BY("recommended_by"),
         RECOMMENDED_CODE("recommended_code"),
+        WEB_PUSH_DIGEST_CODE("web_push_digest_code"),
         EMAIL("email"),
         PHONE("phone"),
         EXTERNAL_ID("external_id"),
         LOYALTY_ID("loyalty_id"),
         TELEGRAM_ID("telegram_id"),
         PROPERTIES("properties"),
+    }
+
+    internal companion object {
+        /** Wire value of the web-push-digest source; the one type with its own code field. */
+        const val WEB_PUSH_DIGEST_TYPE = "web_push_digest"
+
+        /** Ids a host-run search displayed, sent as one comma-separated field. */
+        const val RESULTS_PARAM = "results"
     }
 }
