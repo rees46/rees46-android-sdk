@@ -199,6 +199,37 @@ class TrackingApiImplTest {
         val body = capturedBody(path = "push")
         assertEquals("purchase", body.getString("event"))
         assertEquals("order-1", body.getString("order_id"))
+        assertFalse(body.has("gift_package"))
+    }
+
+    @Test
+    fun purchase_withGiftPackage_sendsTheFlag() {
+        tracking.purchase(
+            PurchaseTrackingRequest(
+                orderId = "order-1",
+                orderPrice = 100.0,
+                items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0)),
+                isGiftPackage = true
+            )
+        )
+
+        val body = capturedBody(path = "push")
+        assertTrue(body.getBoolean("gift_package"))
+    }
+
+    @Test
+    fun purchase_allowsGiftPackageInsideCustom() {
+        tracking.purchase(
+            PurchaseTrackingRequest(
+                orderId = "order-1",
+                orderPrice = 100.0,
+                items = listOf(PurchaseItemRequest(id = "sku-1", amount = 1, price = 100.0)),
+                custom = mapOf("gift_package" to true)
+            )
+        )
+
+        val body = capturedBody(path = "push")
+        assertTrue(body.getJSONObject("custom").getBoolean("gift_package"))
     }
 
     // endregion

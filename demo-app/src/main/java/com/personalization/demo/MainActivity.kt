@@ -574,6 +574,7 @@ class MainActivity : AppCompatActivity() {
             recommendedSource = JSONObject().put("source_key", "source_value"),
             stream = "demo-stream",
             segment = "A",
+            isGiftPackage = true,
         )
         sdk.trackPurchase(
             request,
