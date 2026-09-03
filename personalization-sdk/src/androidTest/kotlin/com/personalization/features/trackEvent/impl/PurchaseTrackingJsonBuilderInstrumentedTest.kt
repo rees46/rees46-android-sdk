@@ -29,6 +29,7 @@ class PurchaseTrackingJsonBuilderInstrumentedTest {
         assertEquals("order-1", json.getString(PurchaseTrackingWireKeys.ORDER_ID))
         assertEquals(99.5, json.getDouble(PurchaseTrackingWireKeys.ORDER_PRICE), 0.0001)
         assertFalse(json.has(PurchaseTrackingWireKeys.TAX_FREE))
+        assertFalse(json.has(PurchaseTrackingWireKeys.GIFT_PACKAGE))
         assertFalse(json.has(PurchaseTrackingWireKeys.CUSTOM))
         val items = json.getJSONArray(PurchaseTrackingWireKeys.ITEMS)
         assertEquals(1, items.length())
@@ -69,9 +70,11 @@ class PurchaseTrackingJsonBuilderInstrumentedTest {
             recommendedSource = JSONObject().put("src", 1),
             stream = "s1",
             segment = "B",
+            isGiftPackage = true,
         )
         val json = PurchaseTrackingJsonBuilder.buildOrError(request).getOrThrow()
         assertTrue(json.getBoolean(PurchaseTrackingWireKeys.TAX_FREE))
+        assertTrue(json.getBoolean(PurchaseTrackingWireKeys.GIFT_PACKAGE))
         assertEquals("pickup", json.getString(PurchaseTrackingWireKeys.DELIVERY_TYPE))
         assertTrue(json.has(PurchaseTrackingWireKeys.CUSTOM))
         assertTrue(json.has(PurchaseTrackingWireKeys.RECOMMENDED_SOURCE))

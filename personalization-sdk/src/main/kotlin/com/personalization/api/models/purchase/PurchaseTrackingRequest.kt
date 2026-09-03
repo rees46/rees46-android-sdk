@@ -28,4 +28,5 @@ data class PurchaseTrackingRequest(
     val recommendedSource: JSONObject? = null,
     val stream: String? = null,
     val segment: String? = null,
+    val isGiftPackage: Boolean = false,
 )

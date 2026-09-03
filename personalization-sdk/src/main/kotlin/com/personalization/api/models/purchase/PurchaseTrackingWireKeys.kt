@@ -19,6 +19,7 @@ internal object PurchaseTrackingWireKeys {
     const val DELIVERY_ADDRESS = "delivery_address"
     const val PAYMENT_TYPE = "payment_type"
     const val TAX_FREE = "tax_free"
+    const val GIFT_PACKAGE = "gift_package"
     const val PROMOCODE = "promocode"
     const val ORDER_CASH = "order_cash"
     const val ORDER_BONUSES = "order_bonuses"

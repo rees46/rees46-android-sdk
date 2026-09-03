@@ -103,6 +103,9 @@ internal object PurchaseTrackingJsonBuilder {
         if (request.isTaxFree) {
             root.put(PurchaseTrackingWireKeys.TAX_FREE, true)
         }
+        if (request.isGiftPackage) {
+            root.put(PurchaseTrackingWireKeys.GIFT_PACKAGE, true)
+        }
         request.promocode?.takeIf { it.isNotBlank() }?.let {
             root.put(PurchaseTrackingWireKeys.PROMOCODE, it)
         }
